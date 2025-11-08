@@ -12,6 +12,17 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/engine", tags=["engine"])
 
+# Redis configuration
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379')
+STREAM_BOOK = "market:solusdt:book"
+STREAM_FUNDING = "market:solusdt:funding"
+STREAM_LIQUIDATIONS = "market:solusdt:liquidations"
+
+# Cache
+guards_cache = {}
+guards_cache_time = None
+CACHE_TTL = 5  # seconds
+
 # In-memory storage for POC (replace with Redis/MongoDB later)
 orders = {}
 activity_log = []
