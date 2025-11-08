@@ -44,9 +44,12 @@ export class ExecutionEngine {
   private config: EngineConfig;
   private attempts: Map<string, number> = new Map();
   private fills: Map<string, { price: number; size: number; timestamp: number }> = new Map();
+  private redis: Redis;
+  private running: boolean = false;
 
   constructor(config: EngineConfig) {
     this.config = config;
+    this.redis = new Redis(REDIS_URL);
   }
 
   /**
