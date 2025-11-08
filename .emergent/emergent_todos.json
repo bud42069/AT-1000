@@ -1,42 +1,58 @@
 [
   {
-    "content": "Research Drift SDK delegation APIs and compute budget best practices via web search",
-    "status": "completed"
+    "content": "DoD-1: Implement DriftAdapter with setDelegate() and revokeDelegate() - return confirmed tx sigs",
+    "status": "pending"
   },
   {
-    "content": "Set up project structure: backend/.env, workers/, frontend packages (Solana wallet adapters, recharts, d3, framer-motion)",
-    "status": "completed"
+    "content": "DoD-2: Implement placePostOnly(), placeStops(), cancelAndReplace(), closePositionMarket() in DriftAdapter",
+    "status": "pending"
   },
   {
-    "content": "Create TypeScript POC script for Drift delegation (generate ephemeral key, setDelegate, place post-only, cancel/replace, SL/TP ladder)",
-    "status": "completed"
+    "content": "DoD-3: Build Binance CVD+VWAP signal worker - emit OrderIntent JSON to data/signals/solusdt-1m.jsonl",
+    "status": "pending"
   },
   {
-    "content": "Create FastAPI stub with /api/engine/kill and /api/engine/ping endpoints",
-    "status": "completed"
+    "content": "DoD-4: Implement risk & sizing guard - spread/depth/liq-gap/funding/basis checks + ATR trailing",
+    "status": "pending"
   },
   {
-    "content": "Wire environment variables (HELIUS_API_KEY, RPC_URL, DRIFT_ENV=devnet, etc.)",
-    "status": "completed"
+    "content": "DoD-5: Wire backend - POST /api/engine/orders with SIWS validation, WS engine.events fanout, persist to Mongo",
+    "status": "pending"
   },
   {
-    "content": "Create minimal UI shell: TopBar (Connect/DelegationBadge/EmergencyStop), StrategyControls panel, ActivityLog table",
-    "status": "completed"
+    "content": "DoD-6: Frontend delegate flow - setDelegate tx button, badge updates, revoke button, strategy toggle",
+    "status": "pending"
   },
   {
-    "content": "Apply design tokens from design_guidelines.md to frontend (CSS variables, fonts, colors)",
-    "status": "completed"
+    "content": "Add security: CORS lock, CSRF protection, rate limiting (5/min/wallet on /orders)",
+    "status": "pending"
   },
   {
-    "content": "Test backend API endpoints (/api/engine/ping, /api/engine/kill)",
-    "status": "completed"
+    "content": "Add VERSION.txt and return version in /api/engine/ping response",
+    "status": "pending"
   },
   {
-    "content": "Verify frontend components render correctly after wallet connect",
-    "status": "completed"
+    "content": "Acceptance Test 1: Delegation flow (create delegate → Active badge → revoke → Inactive)",
+    "status": "pending"
   },
   {
-    "content": "Document Phase 1 completion and prepare Phase 2 todos",
-    "status": "completed"
+    "content": "Acceptance Test 2: Signal→Order (VWAP reclaim → engine receives intent → post-only placed on Drift)",
+    "status": "pending"
+  },
+  {
+    "content": "Acceptance Test 3: Modify/Replace (unfilled order cancelled and replaced, max 2 attempts)",
+    "status": "pending"
+  },
+  {
+    "content": "Acceptance Test 4: Stops/Targets (SL+TP ladder on fill, TP1→BE+fees, ATR trail active)",
+    "status": "pending"
+  },
+  {
+    "content": "Acceptance Test 5: Kill-switch (over-spread condition → engine halts, cancels, logs)",
+    "status": "pending"
+  },
+  {
+    "content": "Acceptance Test 6: Persistence (all events in /api/activity and ActivityLog panel)",
+    "status": "pending"
   }
 ]
