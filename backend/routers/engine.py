@@ -242,7 +242,7 @@ async def get_guards():
                 "ask_usd": round(depth_ask_usd, 2)
             },
             "funding_apr": round(funding_apr, 2),
-            "basis_bps": 0.0,  # TODO: Calculate from multi-venue prices
+            "basis_bps": round(basis_bps, 2),
             "oi_notional": round(oi_notional, 2),
             "liq_events_5m": liq_count,
             "status": status,
