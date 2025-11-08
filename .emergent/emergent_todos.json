@@ -1,7 +1,7 @@
 [
   {
     "content": "S3.1: Replace placeholder Drift decoder with SDK v2 - accurate position/collateral parsing",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "S3.2: Implement delegation flow (setDelegate/revoke) with UI controls",
