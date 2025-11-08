@@ -33,10 +33,10 @@
   },
   {
     "content": "Verify frontend components render correctly after wallet connect",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
-    "content": "Test POC + UI shell integration and call testing_agent for validation",
-    "status": "pending"
+    "content": "Document Phase 1 completion and prepare Phase 2 todos",
+    "status": "completed"
   }
 ]
