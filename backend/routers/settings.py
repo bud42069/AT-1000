@@ -24,7 +24,7 @@ class UserSettings(BaseModel):
 @router.get("/")
 async def get_settings(user_id: str):
     """Get user settings"""
-    settings = await settings_collection.find_one({"userId": user_id})
+    settings = await settings_collection.find_one({"userId": user_id}, {"_id": 0})
     if not settings:
         # Return defaults
         return UserSettings(userId=user_id).dict()
