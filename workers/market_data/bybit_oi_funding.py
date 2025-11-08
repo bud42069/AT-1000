@@ -368,7 +368,11 @@ class BybitOIFunding:
         # Create HTTP session
         await self.create_session()
         
+        # Fetch funding interval from instruments-info (instrument-specific)
+        self.funding_interval_hours = await self.fetch_funding_interval()
+        
         logger.info(f"Starting OI + Funding poller (interval: {POLL_INTERVAL}s)")
+        logger.info(f"Funding interval: {self.funding_interval_hours}h")
         
         while self.running:
             try:
