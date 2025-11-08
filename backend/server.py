@@ -71,18 +71,35 @@ async def get_status_checks():
 
 # Import and include additional routers
 from routers import engine, settings
+from auth import siws
+from ws import manager
 
-# Include the router in the main app
+# Startup: Initialize Redis for rate limiting
+@app.on_event("startup")
+async def startup_event():
+    redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+    try:
+        r = await redis_from_url(redis_url, encoding="utf-8", decode_responses=True)
+        await FastAPILimiter.init(r)
+        logger.info(f"✅ FastAPILimiter initialized with Redis: {redis_url}")
+    except Exception as e:
+        logger.warning(f"⚠️  Redis not available, rate limiting disabled: {e}")
+
+# Include routers
 app.include_router(api_router)
 app.include_router(engine.router)
 app.include_router(settings.router)
+app.include_router(siws.router)
+app.include_router(manager.router)
 
+# CORS Configuration (strict)
+allowed_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,  # No cookies, JWT in headers only
+    allow_origins=allowed_origins,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Configure logging
