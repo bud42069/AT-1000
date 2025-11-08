@@ -34,7 +34,7 @@ function AppContent() {
   useEffect(() => {
     if (connected) {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}${BACKEND_URL}/engine/ws`;
+      const wsUrl = `${protocol}//${window.location.host}/api/ws/engine.events`;
       const socket = new WebSocket(wsUrl);
 
       socket.onopen = () => {
