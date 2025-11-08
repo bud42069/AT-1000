@@ -1,18 +1,30 @@
 [
   {
-    "content": "S3.5: Implement SL/TP ladder (50%/30%/20%) + TP1→BE+fees + ATR trail",
-    "status": "completed"
+    "content": "S3.7: Activity log persistence (Mongo) + Prometheus metrics",
+    "status": "in_progress"
+  },
+  {
+    "content": "S3.7a: Install prometheus-fastapi-instrumentator and expose /metrics",
+    "status": "pending"
+  },
+  {
+    "content": "S3.7b.1: Managed signer from env/KMS (replace generated keypair)",
+    "status": "pending"
+  },
+  {
+    "content": "S3.7b.2: Helius webhook auth enforcement (secret verification + retry)",
+    "status": "pending"
+  },
+  {
+    "content": "S3.7b.3: Bybit funding interval from instruments-info API",
+    "status": "pending"
+  },
+  {
+    "content": "S3.7b.4: Guard timeout increase to 15-45s jittered + fail-closed",
+    "status": "pending"
   },
   {
     "content": "S3.6: Build manual-sign fallback for non-delegated orders",
-    "status": "pending"
-  },
-  {
-    "content": "S3.7: Activity log persistence (Mongo) + Prometheus metrics",
-    "status": "pending"
-  },
-  {
-    "content": "S3.7b: Hardening - managed signer (env/KMS), Helius auth model, funding interval from API",
     "status": "pending"
   },
   {
@@ -24,11 +36,11 @@
     "status": "pending"
   },
   {
-    "content": "S3.10: Implement kill-switch with order cancellation",
+    "content": "S3.10: Kill-switch enhancement - cancel + pause consumption",
     "status": "pending"
   },
   {
-    "content": "S3.11: Documentation - execution engine + delegation guides",
+    "content": "S3.11: Documentation - EXECUTION_ENGINE.md + DELEGATION.md",
     "status": "pending"
   }
 ]
