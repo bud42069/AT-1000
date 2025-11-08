@@ -677,7 +677,7 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 - Drift: Devnet program IDs (auto-selected by SDK env='devnet')
 - Testing: Safe environment with fake funds
 - WebSocket: Local testing, no TLS required
-- Preview URL: https://phantom-trader-4.preview.emergentagent.com
+- Preview URL: https://solana-autotrader-3.preview.emergentagent.com
 
 **Mainnet (Phase 4):**
 - RPC: Helius mainnet endpoint (same API key, change env='mainnet-beta')

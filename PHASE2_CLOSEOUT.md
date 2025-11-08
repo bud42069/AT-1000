@@ -3,7 +3,7 @@
 ## Context
 - **Status**: 85% Complete (DoD 1-5 ✅, DoD-6 pending)
 - **Repo**: https://github.com/bud42069/AT-1000
-- **Preview**: https://phantom-trader-4.preview.emergentagent.com
+- **Preview**: https://solana-autotrader-3.preview.emergentagent.com
 - **Target**: 100% Phase 2 completion with all 6 acceptance tests passing
 
 ---
