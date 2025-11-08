@@ -34,6 +34,52 @@ async def connect_redis():
     )
 
 
+@router.get("/market/bars")
+async def get_market_bars(
+    symbol: str = Query(default="SOLUSDT"),
+    limit: int = Query(default=60, le=1000)
+):
+    """
+    Get recent 1-minute bars (OHLC, volume, CVD, VWAP)
+    Data source: Binance trades worker → Redis Stream
+    """
+    try:
+        # Read from Redis Stream
+        redis = await connect_redis()
+        
+        result = await redis.xrevrange(
+            "market:solusdt:trades",
+            count=limit
+        )
+        
+        await redis.close()
+        
+        # Parse results (newest first, so reverse)
+        bars = []
+        for entry_id, data in reversed(result):
+            try:
+                bars.append({
+                    'timestamp': int(data.get('timestamp', 0)),
+                    'open': float(data.get('open', 0)),
+                    'high': float(data.get('high', 0)),
+                    'low': float(data.get('low', 0)),
+                    'close': float(data.get('close', 0)),
+                    'volume': float(data.get('volume', 0)),
+                    'buy_volume': float(data.get('buy_volume', 0)),
+                    'sell_volume': float(data.get('sell_volume', 0)),
+                    'cvd': float(data.get('cvd', 0)),
+                    'vwap': float(data.get('vwap', 0))
+                })
+            except Exception as e:
+                logger.error(f"Error parsing bar: {e}")
+        
+        return bars
+    
+    except Exception as e:
+        logger.error(f"Error fetching market bars: {e}")
+        return []
+
+
 @router.get("/onchain/liq-map")
 async def get_liq_map(
     limit: int = Query(default=100, le=1000),
