@@ -135,9 +135,7 @@ function AppContent() {
   // Emergency stop
   const handleEmergencyStop = async () => {
     try {
-      await axios.post(`${BACKEND_URL}/engine/kill`, {
-        reason: 'User-initiated emergency stop',
-      });
+      await killSwitch('User-initiated emergency stop');
       setStrategyEnabled(false);
       toast.error('Emergency Stop Activated', {
         description: 'All orders cancelled. Automation disabled.',
