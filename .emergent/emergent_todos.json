@@ -1,23 +1,15 @@
 [
   {
-    "content": "Implement binance_book_top.py - WebSocket depth@100ms → TOB + 10bps depth → Redis",
-    "status": "completed"
-  },
-  {
-    "content": "Implement liquidations_multi.py - Binance/OKX/Bybit liquidations → Redis Stream",
-    "status": "completed"
-  },
-  {
-    "content": "Implement bybit_oi_funding.py - 1-min poll OI + funding → Redis Stream",
-    "status": "completed"
-  },
-  {
     "content": "Create /app/backend/routers/guards.py - read from Redis, replace mock values",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Wire guards endpoint to Redis Streams with 5s cache",
-    "status": "pending"
+    "status": "completed"
+  },
+  {
+    "content": "Create worker startup script for testing",
+    "status": "in_progress"
   },
   {
     "content": "Test: All workers streaming to Redis → Guards endpoint returning live data",
