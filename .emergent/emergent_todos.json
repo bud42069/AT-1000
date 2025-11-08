@@ -1,15 +1,15 @@
 [
   {
     "content": "DoD-1: Implement DriftAdapter with setDelegate() and revokeDelegate() - return confirmed tx sigs",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "DoD-2: Implement placePostOnly(), placeStops(), cancelAndReplace(), closePositionMarket() in DriftAdapter",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "DoD-3: Build Binance CVD+VWAP signal worker - emit OrderIntent JSON to data/signals/solusdt-1m.jsonl",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "content": "DoD-4: Implement risk & sizing guard - spread/depth/liq-gap/funding/basis checks + ATR trailing",
