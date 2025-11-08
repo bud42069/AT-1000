@@ -5,30 +5,34 @@
   },
   {
     "content": "Set up project structure: backend/.env, workers/, frontend packages (Solana wallet adapters, recharts, d3, framer-motion)",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Create TypeScript POC script for Drift delegation (generate ephemeral key, setDelegate, place post-only, cancel/replace, SL/TP ladder)",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Create FastAPI stub with /api/engine/kill and /api/engine/ping endpoints",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Wire environment variables (HELIUS_API_KEY, RPC_URL, DRIFT_ENV=devnet, etc.)",
-    "status": "pending"
-  },
-  {
-    "content": "Test delegation flow on devnet: setDelegate, place order, confirm, revoke",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Create minimal UI shell: TopBar (Connect/DelegationBadge/EmergencyStop), StrategyControls panel, ActivityLog table",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Apply design tokens from design_guidelines.md to frontend (CSS variables, fonts, colors)",
+    "status": "completed"
+  },
+  {
+    "content": "Test backend API endpoints (/api/engine/ping, /api/engine/kill)",
+    "status": "in_progress"
+  },
+  {
+    "content": "Verify frontend components render correctly after wallet connect",
     "status": "pending"
   },
   {
