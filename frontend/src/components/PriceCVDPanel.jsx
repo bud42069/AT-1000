@@ -8,56 +8,56 @@ export const PriceCVDPanel = () => {
   const [priceData, setPriceData] = useState([]);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [cvdTrend, setCvdTrend] = useState('neutral');
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for POC - replace with real WebSocket stream
+  // Fetch live price and CVD data from Binance trades worker
   useEffect(() => {
-    const generateMockData = () => {
-      const data = [];
-      let price = 20 + Math.random() * 5;
-      let cvd = 0;
-      
-      for (let i = 0; i < 60; i++) {
-        price += (Math.random() - 0.5) * 0.5;
-        const delta = (Math.random() - 0.5) * 1000;
-        cvd += delta;
+    const fetchLiveData = async () => {
+      try {
+        // Fetch last 60 bars from Redis via backend API
+        const response = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/api/market/bars?symbol=SOLUSDT&limit=60`
+        );
         
-        data.push({
-          t: `${i}m`,
-          price: parseFloat(price.toFixed(2)),
-          cvd: parseFloat(cvd.toFixed(0)),
-          delta: parseFloat(delta.toFixed(0)),
-        });
+        if (!response.ok) {
+          console.warn('Market bars API not available, using fallback');
+          return;
+        }
+        
+        const bars = await response.json();
+        
+        if (!bars || bars.length === 0) {
+          console.warn('No market data available yet');
+          return;
+        }
+        
+        // Transform bars for chart
+        const chartData = bars.map((bar, idx) => ({
+          t: new Date(bar.timestamp).toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }),
+          price: parseFloat(bar.close.toFixed(2)),
+          cvd: parseFloat(bar.cvd.toFixed(0)),
+          delta: parseFloat((bar.buy_volume - bar.sell_volume).toFixed(0)),
+        }));
+        
+        setPriceData(chartData);
+        
+        // Set current price and trend from latest bar
+        const latest = chartData[chartData.length - 1];
+        setCurrentPrice(latest.price);
+        setCvdTrend(latest.cvd > 0 ? 'bullish' : 'bearish');
+        setLoading(false);
+        
+      } catch (err) {
+        console.error('Failed to fetch live market data:', err);
       }
-      
-      return data;
     };
 
-    const mockData = generateMockData();
-    setPriceData(mockData);
-    setCurrentPrice(mockData[mockData.length - 1].price);
-    setCvdTrend(mockData[mockData.length - 1].cvd > 0 ? 'bullish' : 'bearish');
-
-    // Update every 5 seconds
-    const interval = setInterval(() => {
-      setPriceData(prev => {
-        const last = prev[prev.length - 1];
-        const newPrice = last.price + (Math.random() - 0.5) * 0.5;
-        const newDelta = (Math.random() - 0.5) * 1000;
-        const newCvd = last.cvd + newDelta;
-        
-        const updated = [...prev.slice(1), {
-          t: `${prev.length}m`,
-          price: parseFloat(newPrice.toFixed(2)),
-          cvd: parseFloat(newCvd.toFixed(0)),
-          delta: parseFloat(newDelta.toFixed(0)),
-        }];
-        
-        setCurrentPrice(newPrice);
-        setCvdTrend(newCvd > 0 ? 'bullish' : 'bearish');
-        
-        return updated;
-      });
-    }, 5000);
+    fetchLiveData();
+    const interval = setInterval(fetchLiveData, 5000); // Update every 5s
 
     return () => clearInterval(interval);
   }, []);
