@@ -196,16 +196,20 @@ class BybitOIFunding:
                 
                 # Get latest funding rate
                 funding_data = list_data[0]
-                funding_rate_8h = float(funding_data.get('fundingRate', 0))
+                funding_rate = float(funding_data.get('fundingRate', 0))
                 
-                # Calculate annualized funding rate
-                # 8h rate * 3 (per day) * 365 (per year)
-                funding_apr = funding_rate_8h * 3 * 365 * 100  # Convert to percentage
+                # Calculate annualized funding rate using ACTUAL interval
+                # APR = (funding_rate_per_interval) * (intervals_per_day) * 365
+                intervals_per_day = 24 / self.funding_interval_hours
+                funding_apr = funding_rate * intervals_per_day * 365 * 100  # Convert to percentage
+                
+                logger.debug(f"Funding: rate={funding_rate:.6f}, interval={self.funding_interval_hours}h, APR={funding_apr:.2f}%")
                 
                 return {
-                    'funding_rate_8h': funding_rate_8h,
+                    'funding_rate': funding_rate,
                     'funding_apr': funding_apr,
-                    'funding_rate_timestamp': int(funding_data.get('fundingRateTimestamp', 0))
+                    'funding_rate_timestamp': int(funding_data.get('fundingRateTimestamp', 0)),
+                    'funding_interval_hours': self.funding_interval_hours
                 }
         
         except asyncio.TimeoutError:
