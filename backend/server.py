@@ -80,7 +80,7 @@ async def get_status_checks():
     return status_checks
 
 # Import and include additional routers
-from routers import engine, settings, webhooks, market
+from routers import engine, settings, webhooks, market, delegation
 from auth import siws
 from ws import manager
 
