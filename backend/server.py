@@ -47,13 +47,13 @@ async def root():
 
 @api_router.get("/version")
 async def get_version():
-    \"\"\"Get application version\"\"\"
+    """Get application version"""
     version_file = Path(__file__).parent.parent / 'VERSION.txt'
     if version_file.exists():
         version = version_file.read_text().strip()
     else:
         version = "1.0.0-phase2"
-    return {\"version\": version, \"env\": os.environ.get('DRIFT_ENV', 'devnet')}
+    return {"version": version, "env": os.environ.get('DRIFT_ENV', 'devnet')}
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
