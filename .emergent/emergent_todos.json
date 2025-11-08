@@ -1,10 +1,10 @@
 [
   {
-    "content": "S3.1: Replace placeholder Drift decoder with SDK v2 - accurate position/collateral parsing",
-    "status": "completed"
+    "content": "S3.2: Implement delegation backend endpoints (POST /api/delegate/set, /api/delegate/revoke)",
+    "status": "in_progress"
   },
   {
-    "content": "S3.2: Implement delegation flow (setDelegate/revoke) with UI controls",
+    "content": "S3.2b: Build DelegateFlow.tsx frontend component with tx signing",
     "status": "pending"
   },
   {
