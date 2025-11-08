@@ -72,6 +72,7 @@ export class ExecutionEngine {
   /**
    * DoD-4: Apply risk guards before execution (LIVE DATA)
    * Pulls /api/engine/guards and blocks if any threshold breached
+   * Timeout: 15-45s jittered, fail-closed on error
    */
   private async applyGuards(intent: OrderIntent): Promise<{ pass: boolean; reason?: string }> {
     console.log('🛡️ Applying risk guards (live data)...');
@@ -85,8 +86,11 @@ export class ExecutionEngine {
 
     // Guard 2-6: Pull live market data from guards API
     try {
+      // Jittered timeout between 15-45s for RPC congestion resilience
+      const timeout = 15000 + Math.random() * 30000;
+      
       const response = await axios.get(`${BACKEND_URL}/api/engine/guards`, {
-        timeout: 10000
+        timeout: Math.floor(timeout)
       });
       
       const guards = response.data;
@@ -115,7 +119,7 @@ export class ExecutionEngine {
         return { pass: false, reason };
       }
       
-      // Guard 4: Funding check (Bybit funding history)
+      // Guard 4: Funding check (Bybit funding history with instrument-specific interval)
       if (Math.abs(guards.funding_apr) > 300) {
         const reason = `Extreme funding: ${guards.funding_apr.toFixed(1)}% APR (max: ±300%)`;
         console.warn(`❌ ${reason}`);
@@ -140,8 +144,13 @@ export class ExecutionEngine {
       return { pass: true };
       
     } catch (error) {
-      console.error('⚠️ Failed to fetch guards, blocking trade:', error);
-      return { pass: false, reason: 'Guards API unavailable' };
+      // Fail-closed: Block trades when guards API unavailable
+      const reason = error.code === 'ECONNABORTED' 
+        ? 'Guards API timeout - fail-closed for safety'
+        : 'Guards API unavailable - fail-closed';
+      
+      console.error(`⚠️ ${reason}:`, error.message);
+      return { pass: false, reason };
     }
   }
 
