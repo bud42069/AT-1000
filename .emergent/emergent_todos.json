@@ -1,11 +1,11 @@
 [
   {
     "content": "S3.7: Activity log persistence (Mongo) + Prometheus metrics",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "S3.7a: Install prometheus-fastapi-instrumentator and expose /metrics",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "S3.7b.1: Managed signer from env/KMS (replace generated keypair)",
