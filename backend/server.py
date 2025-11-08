@@ -26,6 +26,9 @@ db = client[os.environ.get('DB_NAME', 'autotrader')]
 # Create the main app without a prefix
 app = FastAPI(title="AT-1000 Auto-Trader Backend", version="1.0.0-phase2")
 
+# Prometheus metrics instrumentation
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
