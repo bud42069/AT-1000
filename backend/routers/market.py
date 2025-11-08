@@ -35,16 +35,27 @@ async def connect_redis():
 
 
 @router.get("/onchain/liq-map")
-async def get_liq_map(limit: int = Query(default=100, le=1000)):
+async def get_liq_map(
+    limit: int = Query(default=100, le=1000),
+    v: int = Query(default=1, ge=1, le=2)
+):
     """
     Get Drift liquidation map (oracle-based estimates)
     Returns top N positions by distance to liquidation
+    
+    Query params:
+    - limit: Max number of results (default: 100, max: 1000)
+    - v: Version (1 = Python placeholder, 2 = TypeScript SDK)
     """
     try:
+        # Select stream based on version
+        stream_key = "onchain:drift:liq_map" if v == 1 else "onchain:drift:liq_map_v2"
+        parquet_path = PARQUET_LIQ_MAP if v == 1 else PARQUET_LIQ_MAP.replace("liq_map", "liq_map_v2")
+        
         # Try reading from Redis Stream first (latest data)
         redis = await connect_redis()
         
-        result = await redis.xrevrange(STREAM_LIQ_MAP, count=limit)
+        result = await redis.xrevrange(stream_key, count=limit)
         await redis.close()
         
         if result:
@@ -60,7 +71,8 @@ async def get_liq_map(limit: int = Query(default=100, le=1000)):
                     'leverage': float(data.get('leverage', 0)),
                     'health': float(data.get('health', 0)),
                     'distance_bps': float(data.get('distance_bps', 0)),
-                    'updated_at': int(data.get('updated_at', 0))
+                    'updated_at': int(data.get('updated_at', 0)),
+                    'version': v
                 })
             
             # Sort by distance_bps (closest to liquidation first)
@@ -69,20 +81,33 @@ async def get_liq_map(limit: int = Query(default=100, le=1000)):
             return estimates[:limit]
         
         # Fallback to Parquet if Redis empty
-        if os.path.exists(PARQUET_LIQ_MAP):
-            table = pq.read_table(PARQUET_LIQ_MAP)
+        if os.path.exists(parquet_path):
+            # Try JSON fallback first (TS scanner saves as JSON temporarily)
+            json_path = parquet_path.replace('.parquet', '.json')
+            if os.path.exists(json_path):
+                import json
+                with open(json_path, 'r') as f:
+                    data = json.load(f)
+                    return sorted(data, key=lambda x: abs(x.get('distanceBps', 0)))[:limit]
+            
+            # Try Parquet
+            table = pq.read_table(parquet_path)
             df = table.to_pandas()
             
             # Sort by distance_bps
             df = df.sort_values('distance_bps', key=abs)
             
-            return df.head(limit).to_dict(orient='records')
+            result = df.head(limit).to_dict(orient='records')
+            for item in result:
+                item['version'] = v
+            
+            return result
         
         # Return empty if no data available
         return []
     
     except Exception as e:
-        logger.error(f"Error fetching liq-map: {e}")
+        logger.error(f"Error fetching liq-map (v{v}): {e}")
         return []
 
 
