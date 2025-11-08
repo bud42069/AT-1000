@@ -55,19 +55,33 @@ class HeliusWebhookHandler:
                 raise
     
     def verify_signature(self, payload: bytes, signature: str) -> bool:
-        """Verify Helius webhook signature"""
+        """
+        Verify Helius webhook signature
+        Reference: https://www.helius.dev/docs/api-reference/webhooks
+        """
         if not HELIUS_WEBHOOK_SECRET:
-            # Skip verification if no secret configured (dev mode)
-            logger.warning("HELIUS_WEBHOOK_SECRET not set, skipping signature verification")
+            # Production: MUST have secret configured
+            logger.error("⚠️ HELIUS_WEBHOOK_SECRET not set - webhook auth disabled (INSECURE)")
+            logger.error("Set HELIUS_WEBHOOK_SECRET environment variable for production")
+            # In dev mode, allow but log warning
             return True
         
         try:
-            # Calculate expected signature
-            expected = hashlib.sha256(
-                HELIUS_WEBHOOK_SECRET.encode() + payload
+            # Calculate expected signature (Helius uses HMAC-SHA256)
+            import hmac
+            expected = hmac.new(
+                HELIUS_WEBHOOK_SECRET.encode(),
+                payload,
+                hashlib.sha256
             ).hexdigest()
             
-            return expected == signature
+            is_valid = hmac.compare_digest(expected, signature)
+            
+            if not is_valid:
+                logger.warning(f"Invalid webhook signature. Expected: {expected[:16]}..., Got: {signature[:16]}...")
+            
+            return is_valid
+            
         except Exception as e:
             logger.error(f"Signature verification error: {e}")
             return False
