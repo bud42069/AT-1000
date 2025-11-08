@@ -62,10 +62,16 @@ async def broadcast_event(event: dict):
         except:
             pass
 
+# Redis Stream for intents
+INTENT_STREAM = "engine:intents"
+
 # Endpoints
 @router.post("/orders", response_model=OrderResponse)
 async def place_order(intent: OrderIntent):
-    """Place new order via execution engine"""
+    """
+    Place new order via execution engine
+    Publishes intent to Redis Stream for consumption by TypeScript execution worker
+    """
     order_id = str(uuid.uuid4())
     timestamp = datetime.now(timezone.utc).isoformat()
     
@@ -85,6 +91,37 @@ async def place_order(intent: OrderIntent):
         "status": "pending",
         "statusBg": "#67E8F9"
     })
+    
+    # Publish intent to Redis Stream for execution engine
+    try:
+        redis = await aioredis.from_url(REDIS_URL, encoding="utf-8", decode_responses=True)
+        
+        await redis.xadd(
+            INTENT_STREAM,
+            {
+                'order_id': order_id,
+                'venue': intent.venue,
+                'side': intent.side,
+                'type': intent.type,
+                'px': str(intent.px),
+                'size': str(intent.size),
+                'sl': str(intent.sl),
+                'tp1': str(intent.tp1),
+                'tp2': str(intent.tp2),
+                'tp3': str(intent.tp3),
+                'leverage': str(intent.leverage),
+                'sub_account_id': '0'
+            },
+            maxlen=1000
+        )
+        
+        await redis.close()
+        
+        logger.info(f"Published intent to Redis Stream: {order_id}")
+        
+    except Exception as e:
+        logger.error(f"Failed to publish intent to Redis: {e}")
+        # Continue anyway - order is still tracked locally
     
     # Broadcast event
     await broadcast_event({
