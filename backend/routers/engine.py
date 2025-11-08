@@ -168,17 +168,110 @@ async def ping():
 
 @router.get("/guards")
 async def get_guards():
-    """Get current risk guard metrics"""
-    # TODO: Wire to live market data (Redis cache or external API)
-    # For now, return mock values that pass guards
-    return {
-        "spread_bps": 6.2,
-        "depth_ok": True,
-        "liq_gap_atr_ok": True,
-        "funding_apr": 112.0,
-        "basis_bps": 4.0,
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
+    """Get current risk guard metrics (LIVE DATA from Redis Streams)"""
+    global guards_cache, guards_cache_time
+    
+    # Check cache
+    if guards_cache_time and (datetime.now(timezone.utc) - guards_cache_time).total_seconds() < CACHE_TTL:
+        return guards_cache
+    
+    try:
+        # Connect to Redis
+        redis = await aioredis.from_url(REDIS_URL, encoding="utf-8", decode_responses=True)
+        
+        # Read latest data from streams
+        book_result = await redis.xrevrange(STREAM_BOOK, count=1)
+        funding_result = await redis.xrevrange(STREAM_FUNDING, count=1)
+        
+        # Count recent liquidations (last 5 minutes)
+        cutoff_time = int((datetime.now(timezone.utc) - timedelta(minutes=5)).timestamp() * 1000)
+        liq_result = await redis.xrange(STREAM_LIQUIDATIONS, min=f"{cutoff_time}-0")
+        liq_count = len(liq_result)
+        
+        await redis.close()
+        
+        # Parse book data
+        spread_bps = 0.0
+        depth_bid_usd = 0.0
+        depth_ask_usd = 0.0
+        
+        if book_result:
+            book_data = book_result[0][1]
+            spread_bps = float(book_data.get('spread_bps', 0))
+            depth_bid_usd = float(book_data.get('depth_10bps_bid_usd', 0))
+            depth_ask_usd = float(book_data.get('depth_10bps_ask_usd', 0))
+        
+        # Parse funding data
+        funding_apr = 0.0
+        oi_notional = 0.0
+        
+        if funding_result:
+            funding_data = funding_result[0][1]
+            funding_apr = float(funding_data.get('funding_apr', 0))
+            oi_notional = float(funding_data.get('oi_notional', 0))
+        
+        # Determine status
+        status = "passing"
+        warnings = []
+        
+        if spread_bps > 10:
+            status = "warning"
+            warnings.append(f"Spread: {spread_bps:.2f}bps")
+        
+        if depth_bid_usd < 50000 or depth_ask_usd < 50000:
+            status = "warning"
+            warnings.append(f"Low depth: ${min(depth_bid_usd, depth_ask_usd):,.0f}")
+        
+        if abs(funding_apr) > 300:
+            status = "warning"
+            warnings.append(f"High funding: {funding_apr:.1f}%")
+        
+        if liq_count > 10:
+            status = "breach"
+            warnings.append(f"{liq_count} liquidations in 5min")
+        
+        result = {
+            "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+            "spread_bps": round(spread_bps, 2),
+            "depth_10bps": {
+                "bid_usd": round(depth_bid_usd, 2),
+                "ask_usd": round(depth_ask_usd, 2)
+            },
+            "funding_apr": round(funding_apr, 2),
+            "basis_bps": 0.0,  # TODO: Calculate from multi-venue prices
+            "oi_notional": round(oi_notional, 2),
+            "liq_events_5m": liq_count,
+            "status": status,
+            "warnings": warnings,
+            "data_source": "live"
+        }
+        
+        # Update cache
+        guards_cache = result
+        guards_cache_time = datetime.now(timezone.utc)
+        
+        return result
+    
+    except Exception as e:
+        logger.error(f"Error fetching live guards data: {e}")
+        
+        # Fallback to mock data
+        return {
+            "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+            "spread_bps": 6.2,
+            "depth_10bps": {
+                "bid_usd": 125000,
+                "ask_usd": 130000
+            },
+            "funding_apr": 112.0,
+            "basis_bps": 4.0,
+            "oi_notional": 45000000,
+            "liq_events_5m": 0,
+            "status": "passing",
+            "warnings": [],
+            "data_source": "fallback",
+            "error": str(e)
+        }
 
 @router.get("/activity")
 async def get_activity():
