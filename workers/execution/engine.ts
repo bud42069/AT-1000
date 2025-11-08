@@ -70,34 +70,79 @@ export class ExecutionEngine {
   }
 
   /**
-   * DoD-4: Apply risk guards before execution
+   * DoD-4: Apply risk guards before execution (LIVE DATA)
+   * Pulls /api/engine/guards and blocks if any threshold breached
    */
-  private async applyGuards(intent: OrderIntent): Promise<boolean> {
-    console.log('🛡️ Applying risk guards...');
+  private async applyGuards(intent: OrderIntent): Promise<{ pass: boolean; reason?: string }> {
+    console.log('🛡️ Applying risk guards (live data)...');
 
-    // Guard 1: Leverage cap
+    // Guard 1: Leverage cap (local check)
     if (intent.leverage > this.config.riskSettings.maxLeverage) {
-      console.warn(`❌ Leverage ${intent.leverage}x exceeds cap ${this.config.riskSettings.maxLeverage}x`);
-      return false;
+      const reason = `Leverage ${intent.leverage}x exceeds cap ${this.config.riskSettings.maxLeverage}x`;
+      console.warn(`❌ ${reason}`);
+      return { pass: false, reason };
     }
 
-    // Guard 2: Spread check (placeholder - needs live market data)
-    // TODO: Implement spread < 10 bps check
-
-    // Guard 3: Depth check (placeholder)
-    // TODO: Implement depth ≥ 50% of 30-day median
-
-    // Guard 4: Liq-gap check (placeholder)
-    // TODO: Implement liq-gap ≥ 4× ATR(5m)
-
-    // Guard 5: Funding check (placeholder)
-    // TODO: Implement funding APR < 500
-
-    // Guard 6: Basis check (placeholder)
-    // TODO: Implement |basis| < 10 bps
-
-    console.log('✅ All guards passed');
-    return true;
+    // Guard 2-6: Pull live market data from guards API
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/engine/guards`, {
+        timeout: 10000
+      });
+      
+      const guards = response.data;
+      
+      console.log('📊 Live guards data:', {
+        spread_bps: guards.spread_bps,
+        depth: guards.depth_10bps,
+        funding_apr: guards.funding_apr,
+        basis_bps: guards.basis_bps,
+        liq_events_5m: guards.liq_events_5m,
+        status: guards.status
+      });
+      
+      // Guard 2: Spread check (Binance depth@100ms)
+      if (guards.spread_bps > 10) {
+        const reason = `Spread too wide: ${guards.spread_bps}bps (max: 10bps)`;
+        console.warn(`❌ ${reason}`);
+        return { pass: false, reason };
+      }
+      
+      // Guard 3: Depth check (Binance TOB ±10bps)
+      const minDepth = Math.min(guards.depth_10bps.bid_usd, guards.depth_10bps.ask_usd);
+      if (minDepth < 50000) {
+        const reason = `Insufficient depth: $${minDepth.toFixed(0)} (min: $50k)`;
+        console.warn(`❌ ${reason}`);
+        return { pass: false, reason };
+      }
+      
+      // Guard 4: Funding check (Bybit funding history)
+      if (Math.abs(guards.funding_apr) > 300) {
+        const reason = `Extreme funding: ${guards.funding_apr.toFixed(1)}% APR (max: ±300%)`;
+        console.warn(`❌ ${reason}`);
+        return { pass: false, reason };
+      }
+      
+      // Guard 5: Basis check (Binance USDT vs OKX USDC)
+      if (Math.abs(guards.basis_bps) > 50) {
+        const reason = `High basis: ${guards.basis_bps.toFixed(2)}bps (max: ±50bps)`;
+        console.warn(`❌ ${reason}`);
+        return { pass: false, reason };
+      }
+      
+      // Guard 6: Liquidation spike check
+      if (guards.liq_events_5m > 10) {
+        const reason = `Liquidation spike: ${guards.liq_events_5m} events in 5min (max: 10)`;
+        console.warn(`❌ ${reason}`);
+        return { pass: false, reason };
+      }
+      
+      console.log('✅ All guards passed');
+      return { pass: true };
+      
+    } catch (error) {
+      console.error('⚠️ Failed to fetch guards, blocking trade:', error);
+      return { pass: false, reason: 'Guards API unavailable' };
+    }
   }
 
   /**
