@@ -211,6 +211,9 @@ async def get_guards():
             funding_apr = float(funding_data.get('funding_apr', 0))
             oi_notional = float(funding_data.get('oi_notional', 0))
         
+        # Calculate basis (USDT vs USDC)
+        basis_bps = await get_basis(use_cache=True)
+        
         # Determine status
         status = "passing"
         warnings = []
