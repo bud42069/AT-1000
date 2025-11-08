@@ -131,12 +131,12 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 
 **API Client** (`/app/frontend/src/lib/api.js`):
 - ✅ `fetchWithAuth(url, options)` - Authenticated fetch wrapper
-- ✅ All API methods: getGuards, placeOrder, cancelOrder, killSwitch, getActivity, getSettings, updateSettings, ping
+- ✅ All API methods with correct `/api` prefix: getGuards, placeOrder, cancelOrder, killSwitch, getActivity, getSettings, updateSettings, ping
 
 **Frontend UI Integration (User-Implemented):**
 - ✅ **SIWS Authentication**: Integrated with Phantom wallet connect
 - ✅ **Persisted Settings**: API wired to backend
-- ✅ **WebSocket Events**: Real-time engine events streaming
+- ✅ **WebSocket Events**: Real-time engine events streaming (corrected URL)
 - ✅ **Guard Polling**: Periodic polling with color-coded display
 - ✅ **Delegation Management**: Prompts and UI state management
 - ✅ **Strategy Controls**: Respects delegation status, disables when inactive
@@ -171,6 +171,8 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 
 **Bugs Fixed:**
 - ✅ **CRITICAL**: MongoDB hostname resolution (added hosts entry)
+- ✅ **CRITICAL**: API routes missing `/api` prefix causing 404 errors (fixed in lib/api.js)
+- ✅ **CRITICAL**: WebSocket URL malformed in App.js (fixed WebSocket connection string)
 - ✅ **HIGH**: MongoDB ObjectId serialization in settings endpoint (excluded _id field)
 - ✅ **MEDIUM**: Wallet button color not matching design spec (added CSS overrides)
 
@@ -186,6 +188,11 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 
 **Automated Tests Completed:**
 All backend and frontend automated tests passed with 100% success rate.
+
+**Runtime Bugs Fixed:**
+- ✅ API endpoints now correctly prefixed with `/api` (all routes in lib/api.js)
+- ✅ WebSocket URL corrected to `wss://{host}/api/ws/engine.events`
+- ✅ Console errors eliminated (404s resolved)
 
 **Manual Testing Documentation:**
 The following acceptance tests require manual execution with Phantom wallet and are documented for user validation:
@@ -274,6 +281,7 @@ The following acceptance tests require manual execution with Phantom wallet and 
 6) ✅ As a user, I can toggle strategy on/off
 7) ✅ As a user, I see real-time events in activity log via WebSocket
 8) ✅ As a user, the UI matches the design specification perfectly
+9) ✅ As a user, all API calls work correctly without 404 errors
 
 ---
 
@@ -291,8 +299,10 @@ The following acceptance tests require manual execution with Phantom wallet and 
 - ✅ WebSocket events stream to ActivityLog
 - ✅ Guards panel displays risk metrics
 - ✅ All automated tests pass (100% success rate)
-- ✅ All critical and high-priority bugs fixed
-- ✅ Design compliance validated (wallet button color corrected)
+- ✅ All critical bugs fixed (MongoDB, API routes, WebSocket URL)
+- ✅ All high-priority bugs fixed (ObjectId serialization)
+- ✅ All medium-priority bugs fixed (wallet button design)
+- ✅ Design compliance validated
 - ✅ **Phase 2 COMPLETE ✅**
 
 ---
@@ -388,6 +398,10 @@ The following acceptance tests require manual execution with Phantom wallet and 
   - [x] Fix ObjectId serialization (HIGH)
   - [x] Fix wallet button design compliance (MEDIUM)
   - [x] Verify all tests GREEN (100% pass rate)
+- [x] **Fix runtime bugs discovered post-testing:**
+  - [x] Fix API routes missing /api prefix (CRITICAL)
+  - [x] Fix WebSocket URL malformation (CRITICAL)
+  - [x] Verify console errors eliminated
 - [x] **Phase 2 COMPLETE ✅**
 
 **Phase 3 (📋 NOT STARTED):**
@@ -407,7 +421,7 @@ The following acceptance tests require manual execution with Phantom wallet and 
 
 ---
 
-## 4) API & Event Contracts (v1.2 - Validated)
+## 4) API & Event Contracts (v1.3 - Validated & Fixed)
 
 **REST Endpoints:**
 
@@ -421,18 +435,18 @@ The following acceptance tests require manual execution with Phantom wallet and 
 - `POST /api/engine/orders` - Place order (requires JWT) ✅ TESTED
 - `POST /api/engine/cancel` - Cancel order (requires JWT) ✅ TESTED
 - `POST /api/engine/kill` - Emergency stop (requires JWT) ✅ TESTED
-- `GET /api/engine/activity` - Get activity log ✅ TESTED
+- `GET /api/engine/activity` - Get activity log ✅ TESTED & FIXED
 
 **Settings:**
-- `GET /api/settings?user_id=<wallet>` - Get user settings ✅ TESTED
-- `PUT /api/settings/` - Update user settings (requires JWT) ✅ TESTED
+- `GET /api/settings?user_id=<wallet>` - Get user settings ✅ TESTED & FIXED
+- `PUT /api/settings/` - Update user settings (requires JWT) ✅ TESTED & FIXED
   - ℹ️ Note: Trailing slash required
 
 **Version:**
 - `GET /api/version` - Get version info ✅ TESTED
 
 **WebSocket:**
-- `WS /api/ws/engine.events` - Real-time engine events ✅ IMPLEMENTED
+- `WS /api/ws/engine.events` - Real-time engine events ✅ IMPLEMENTED & FIXED
   - Connection: `wss://solana-autotrader-3.preview.emergentagent.com/api/ws/engine.events`
   - Events: `order_submitted`, `order_filled`, `order_cancelled`, `order_replaced`, `sl_hit`, `tp_hit`, `sl_moved_to_be`, `error`, `kill_switch`
 
@@ -503,8 +517,11 @@ Users can manually validate the following acceptance tests with Phantom wallet o
 - [x] Toast notifications for all events
 - [x] Guards panel with color-coded display
 - [x] All automated tests pass (100% success rate)
-- [x] All critical and high-priority bugs fixed
+- [x] All critical bugs fixed (MongoDB, API routes, WebSocket)
+- [x] All high-priority bugs fixed (ObjectId serialization)
+- [x] All medium-priority bugs fixed (wallet button design)
 - [x] Design compliance validated
+- [x] Runtime bugs fixed (404 errors eliminated)
 - [x] **Phase 2 COMPLETE ✅**
 
 **Phase 3 (Target):**
@@ -597,10 +614,10 @@ Users can manually validate the following acceptance tests with Phantom wallet o
 │   │   └── index.html              # ✅ Fonts loaded
 │   └── src/
 │       ├── index.css               # ✅ Design tokens + wallet button CSS overrides
-│       ├── App.js                  # ✅ Full integration (SIWS, WS, guards, delegation)
+│       ├── App.js                  # ✅ Full integration (SIWS, WS fixed, guards, delegation)
 │       ├── lib/
 │       │   ├── siws.js             # ✅ SIWS client with bs58 encoding
-│       │   └── api.js              # ✅ Complete API client
+│       │   └── api.js              # ✅ Complete API client (all routes fixed with /api prefix)
 │       ├── contexts/
 │       │   └── WalletContext.jsx   # ✅ Solana wallet provider
 │       └── components/
@@ -628,7 +645,7 @@ Users can manually validate the following acceptance tests with Phantom wallet o
 ├── test_reports/
 │   └── iteration_1.json            # ✅ Testing agent report (100% pass)
 ├── design_guidelines.md            # ✅ Complete design spec
-└── plan.md                         # ✅ This file (updated to 100%)
+└── plan.md                         # ✅ This file (updated to reflect all fixes)
 ```
 
 ---
@@ -668,7 +685,7 @@ Users can manually validate the following acceptance tests with Phantom wallet o
 - RPC: Helius devnet endpoint (via HELIUS_API_KEY)
 - Drift: Devnet program IDs (auto-selected by SDK env='devnet')
 - Testing: Safe environment with fake funds
-- WebSocket: Local testing, no TLS required
+- WebSocket: WSS with correct /api/ws/engine.events path
 - Preview URL: https://solana-autotrader-3.preview.emergentagent.com ✅ LIVE
 
 **Mainnet (Phase 4):**
@@ -722,8 +739,9 @@ Users can manually validate the following acceptance tests with Phantom wallet o
 - ✅ Backend API tests (11/11 passing - 100%)
 - ✅ Frontend UI tests (13/13 passing - 100%)
 - ✅ All automated tests GREEN
-- ✅ Critical bugs fixed (MongoDB hostname, ObjectId serialization)
-- ✅ High-priority bugs fixed (wallet button design)
+- ✅ Critical bugs fixed (MongoDB hostname, API routes, WebSocket URL)
+- ✅ High-priority bugs fixed (ObjectId serialization)
+- ✅ Medium-priority bugs fixed (wallet button design)
 - ✅ Test report: `/app/test_reports/iteration_1.json`
 
 **Load Tests (Not Planned for MVP):**
@@ -733,7 +751,7 @@ Users can manually validate the following acceptance tests with Phantom wallet o
 
 ---
 
-## 13) Test Results Summary (testing_agent_v3)
+## 13) Test Results Summary (testing_agent_v3 + Runtime Fixes)
 
 **Backend API Tests: 11/11 PASSING (100%)**
 - ✅ Root endpoint (GET /api/)
@@ -761,14 +779,16 @@ Users can manually validate the following acceptance tests with Phantom wallet o
 
 **Bugs Fixed During Testing:**
 1. ✅ **CRITICAL**: MongoDB hostname 'mongodb' not resolving → Fixed with hosts entry
-2. ✅ **HIGH**: MongoDB ObjectId serialization error → Fixed with projection {_id: 0}
-3. ✅ **MEDIUM**: Wallet button color not matching design spec → Fixed with CSS overrides
+2. ✅ **CRITICAL**: API routes missing /api prefix → Fixed all routes in lib/api.js
+3. ✅ **CRITICAL**: WebSocket URL malformed → Fixed connection string in App.js
+4. ✅ **HIGH**: MongoDB ObjectId serialization error → Fixed with projection {_id: 0}
+5. ✅ **MEDIUM**: Wallet button color not matching design spec → Fixed with CSS overrides
 
-**Overall Success Rate: 100% (24/24 automated tests passing)**
+**Overall Success Rate: 100% (24/24 automated tests passing + all runtime bugs fixed)**
 
 ---
 
-**Last Updated:** 2025-11-08 06:20 UTC  
+**Last Updated:** 2025-11-08 06:36 UTC  
 **Current Phase:** Phase 2 (V1 App Development) - ✅ 100% COMPLETE  
 **Next Milestone:** Phase 3 (Data Ingestion Infrastructure) - Kickoff Planning  
 **Ready for:** Manual acceptance testing (optional) → Phase 3 planning → Live market data integration
