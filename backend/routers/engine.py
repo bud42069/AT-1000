@@ -7,6 +7,7 @@ import uuid
 import redis.asyncio as aioredis
 import os
 import logging
+from backend.services.basis import get_basis
 
 logger = logging.getLogger(__name__)
 
