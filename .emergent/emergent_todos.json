@@ -1,62 +1,50 @@
 [
   {
-    "content": "DoD-1: Implement DriftAdapter with setDelegate() and revokeDelegate() - return confirmed tx sigs",
-    "status": "completed"
+    "content": "Phase 3 Sprint 1: Create /app/workers/market_data/ directory structure",
+    "status": "in_progress"
   },
   {
-    "content": "DoD-2: Implement placePostOnly(), placeStops(), cancelAndReplace(), closePositionMarket() in DriftAdapter",
-    "status": "completed"
+    "content": "Implement binance_trades_cvd.py - WebSocket aggTrade → 1m bars → Redis Stream",
+    "status": "pending"
   },
   {
-    "content": "DoD-3: Build Binance CVD+VWAP signal worker - emit OrderIntent JSON to data/signals/solusdt-1m.jsonl",
-    "status": "completed"
+    "content": "Implement binance_book_top.py - WebSocket depth@100ms → TOB + 10bps depth → Redis",
+    "status": "pending"
   },
   {
-    "content": "DoD-4: Implement risk & sizing guard - spread/depth/liq-gap/funding/basis checks + ATR trailing",
-    "status": "completed"
+    "content": "Implement liquidations_multi.py - Binance/OKX/Bybit liquidations → Redis Stream",
+    "status": "pending"
   },
   {
-    "content": "DoD-5: Wire backend - POST /api/engine/orders with SIWS validation, WS engine.events fanout, persist to Mongo",
-    "status": "completed"
+    "content": "Implement bybit_oi_funding.py - 1-min poll OI + funding → Redis Stream",
+    "status": "pending"
   },
   {
-    "content": "DoD-6: Frontend delegate flow - setDelegate tx button, badge updates, revoke button, strategy toggle",
-    "status": "completed"
+    "content": "Set up Redis Streams infrastructure (install redis-py, configure streams)",
+    "status": "pending"
   },
   {
-    "content": "Add security: CORS lock, CSRF protection, rate limiting (5/min/wallet on /orders)",
-    "status": "completed"
+    "content": "Create /app/backend/routers/guards.py - read from Redis, replace mock values",
+    "status": "pending"
   },
   {
-    "content": "Add VERSION.txt and return version in /api/engine/ping response",
-    "status": "completed"
+    "content": "Wire guards endpoint to Redis Streams with 5s cache",
+    "status": "pending"
   },
   {
-    "content": "Fix wallet button color to match design spec (#84CC16 lime green)",
-    "status": "completed"
+    "content": "Add Parquet storage for trades/CVD/liquidations/OI/funding",
+    "status": "pending"
   },
   {
-    "content": "Run comprehensive testing via testing_agent_v3 - validate all APIs and UI",
-    "status": "completed"
+    "content": "Update requirements.txt with redis, aioredis, pyarrow, fastparquet, websockets, aiohttp",
+    "status": "pending"
   },
   {
-    "content": "Fix CRITICAL bug: API routes missing /api prefix causing 404 errors",
-    "status": "completed"
+    "content": "Test: All workers streaming to Redis → Guards endpoint returning live data",
+    "status": "pending"
   },
   {
-    "content": "Fix CRITICAL bug: WebSocket URL malformed in App.js",
-    "status": "completed"
-  },
-  {
-    "content": "Fix CRITICAL bug: Emergency stop using direct axios instead of api.js killSwitch",
-    "status": "completed"
-  },
-  {
-    "content": "Fix CRITICAL bug: Activity log polling using direct axios instead of api.js getActivity",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2 100% complete - all API calls centralized, all bugs fixed, ready for production testing",
-    "status": "completed"
+    "content": "Phase 3 Sprint 1 MVP: Guards live + workers operational",
+    "status": "pending"
   }
 ]
