@@ -1,18 +1,46 @@
 [
   {
-    "content": "S2.8: Build TelemetryCards.jsx - Spread, Depth, Funding APR, Basis, OI cards",
-    "status": "completed"
+    "content": "S3.1: Replace placeholder Drift decoder with SDK v2 - accurate position/collateral parsing",
+    "status": "in_progress"
   },
   {
-    "content": "S2.9: Build OIChart.jsx - Area chart with Recharts",
-    "status": "completed"
+    "content": "S3.2: Implement delegation flow (setDelegate/revoke) with UI controls",
+    "status": "pending"
   },
   {
-    "content": "S2.10: Build LiqHeatmap.jsx - D3.js price bucket heatmap",
-    "status": "completed"
+    "content": "S3.3: Build ExecutionEngine worker - post-only → monitor → cancel/replace",
+    "status": "pending"
   },
   {
-    "content": "S2.11: Wire telemetry components to App.js and test end-to-end",
-    "status": "completed"
+    "content": "S3.4: Wire live guards to execution engine - block trades on threshold breach",
+    "status": "pending"
+  },
+  {
+    "content": "S3.5: Implement SL/TP ladder + ATR trail on fills",
+    "status": "pending"
+  },
+  {
+    "content": "S3.6: Build manual-sign fallback for non-delegated orders",
+    "status": "pending"
+  },
+  {
+    "content": "S3.7: Activity log + Prometheus metrics integration",
+    "status": "pending"
+  },
+  {
+    "content": "S3.8: E2E testing on devnet - full flow validation",
+    "status": "pending"
+  },
+  {
+    "content": "S3.9: E2E testing on mainnet - tiny size validation",
+    "status": "pending"
+  },
+  {
+    "content": "S3.10: Implement kill-switch with order cancellation",
+    "status": "pending"
+  },
+  {
+    "content": "S3.11: Documentation - execution engine + delegation guides",
+    "status": "pending"
   }
 ]
