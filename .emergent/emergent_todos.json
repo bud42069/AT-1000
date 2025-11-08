@@ -1,34 +1,34 @@
 [
   {
-    "content": "Sprint 2.4: Implement helius_receiver.py - webhook endpoint for Drift events",
-    "status": "completed"
-  },
-  {
-    "content": "Sprint 2.5: Implement drift_liq_map.py - gPA scanner + liquidation estimates",
+    "content": "S2.5: Implement drift_liq_map.py - gPA scanner with oracle-based liquidation estimates",
     "status": "in_progress"
   },
   {
-    "content": "Sprint 2.6: Create /api/market/oi_history endpoint",
+    "content": "S2.5b: Create GET /api/onchain/liq-map endpoint",
     "status": "pending"
   },
   {
-    "content": "Sprint 2.7: Create /api/market/liq_heatmap endpoint",
+    "content": "S2.6: Create GET /api/history/oi endpoint - OI history from Bybit worker",
     "status": "pending"
   },
   {
-    "content": "Sprint 2.8: Build TelemetryCards.jsx component",
+    "content": "S2.7: Create GET /api/history/liqs endpoint - liquidation heatmap data",
     "status": "pending"
   },
   {
-    "content": "Sprint 2.9: Build OIChart.jsx with Recharts",
+    "content": "S2.8: Build TelemetryCards.jsx - Spread, Depth, Funding APR, Basis, OI cards",
     "status": "pending"
   },
   {
-    "content": "Sprint 2.10: Build LiqHeatmap.jsx with D3.js",
+    "content": "S2.9: Build OIChart.jsx - Area chart with Recharts",
     "status": "pending"
   },
   {
-    "content": "Sprint 2.11: Test all components end-to-end",
+    "content": "S2.10: Build LiqHeatmap.jsx - D3.js price bucket heatmap",
+    "status": "pending"
+  },
+  {
+    "content": "S2.11: Wire telemetry components to App.js and test end-to-end",
     "status": "pending"
   }
 ]
