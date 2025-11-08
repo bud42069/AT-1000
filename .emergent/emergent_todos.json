@@ -1,11 +1,11 @@
 [
   {
     "content": "S3.2: Implement delegation backend endpoints (POST /api/delegate/set, /api/delegate/revoke)",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "S3.2b: Build DelegateFlow.tsx frontend component with tx signing",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "S3.3: Build ExecutionEngine worker - post-only → monitor → cancel/replace",
