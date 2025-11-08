@@ -13,11 +13,11 @@
   },
   {
     "content": "DoD-4: Implement risk & sizing guard - spread/depth/liq-gap/funding/basis checks + ATR trailing",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "DoD-5: Wire backend - POST /api/engine/orders with SIWS validation, WS engine.events fanout, persist to Mongo",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "DoD-6: Frontend delegate flow - setDelegate tx button, badge updates, revoke button, strategy toggle",
@@ -25,11 +25,11 @@
   },
   {
     "content": "Add security: CORS lock, CSRF protection, rate limiting (5/min/wallet on /orders)",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Add VERSION.txt and return version in /api/engine/ping response",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Acceptance Test 1: Delegation flow (create delegate → Active badge → revoke → Inactive)",
