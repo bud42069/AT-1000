@@ -101,6 +101,7 @@ app.include_router(engine.router)
 app.include_router(settings.router)
 app.include_router(siws.router)
 app.include_router(manager.router)
+app.include_router(webhooks.router)
 
 # CORS Configuration (strict)
 allowed_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')
