@@ -15,8 +15,15 @@ import { Wallet } from '@drift-labs/sdk';
 import { Keypair } from '@solana/web3.js';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
+import Redis from 'ioredis';
+import axios from 'axios';
 
 dotenv.config({ path: '../backend/.env' });
+
+// Backend API URL
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8001';
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+const INTENT_STREAM = 'engine:intents';
 
 interface RiskSettings {
   maxLeverage: number;
