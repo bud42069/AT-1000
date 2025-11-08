@@ -124,6 +124,49 @@ class BybitOIFunding:
             logger.error(f"Error fetching OI: {e}")
             return None
     
+    async def fetch_funding_interval(self) -> int:
+        """
+        Fetch funding interval from Bybit instruments-info
+        Returns interval in hours (typically 8h, but instrument-specific)
+        Reference: https://bybit-exchange.github.io/docs/v5/market/instrument
+        """
+        try:
+            url = f"{BYBIT_API_BASE}/v5/market/instruments-info"
+            params = {
+                'category': 'linear',
+                'symbol': SYMBOL
+            }
+            
+            async with self.session.get(url, params=params, timeout=10) as resp:
+                if resp.status != 200:
+                    logger.error(f"Failed to fetch instruments-info: {resp.status}")
+                    return 8  # Fallback to 8h
+                
+                data = await resp.json()
+                
+                if data.get('retCode') != 0:
+                    logger.error(f"API error: {data.get('retMsg')}")
+                    return 8
+                
+                result = data.get('result', {})
+                list_data = result.get('list', [])
+                
+                if not list_data:
+                    return 8
+                
+                # Get funding interval (in hours)
+                instrument = list_data[0]
+                interval_minutes = int(instrument.get('fundingInterval', 480))  # Default 480 min = 8h
+                interval_hours = interval_minutes // 60
+                
+                logger.info(f"Funding interval for {SYMBOL}: {interval_hours}h ({interval_minutes}min)")
+                
+                return interval_hours
+        
+        except Exception as e:
+            logger.error(f"Error fetching funding interval: {e}")
+            return 8  # Fallback
+
     async def fetch_funding_rate(self) -> Optional[Dict]:
         """Fetch funding rate from Bybit"""
         try:
