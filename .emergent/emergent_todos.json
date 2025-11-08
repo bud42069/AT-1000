@@ -1,19 +1,19 @@
 [
   {
     "content": "Sprint 2.1: Implement okx_usdc_price.py - SOL-USDC-SWAP trades worker",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Sprint 2.2: Create basis.py service - USDT vs USDC calculation",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Sprint 2.3: Wire basis_bps into /api/engine/guards response",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Sprint 2.4: Implement helius_receiver.py - webhook endpoint for Drift events",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "content": "Sprint 2.5: Implement drift_liq_map.py - gPA scanner + liquidation estimates",
