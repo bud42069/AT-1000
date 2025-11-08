@@ -5,6 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from redis.asyncio import from_url as redis_from_url
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
+from prometheus_fastapi_instrumentator import Instrumentator
 import os
 import logging
 from pathlib import Path
