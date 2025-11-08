@@ -41,6 +41,38 @@ export const TopBar = ({ delegationActive, onRevoke, onEmergencyStop }) => {
     });
   };
 
+  // Fetch wallet balance
+  useEffect(() => {
+    if (connected && publicKey && connection) {
+      const fetchBalance = async () => {
+        try {
+          const bal = await connection.getBalance(publicKey);
+          setBalance((bal / LAMPORTS_PER_SOL).toFixed(4));
+        } catch (err) {
+          console.error('Failed to fetch balance:', err);
+        }
+      };
+
+      fetchBalance();
+      const interval = setInterval(fetchBalance, 30000); // Update every 30s
+
+      return () => clearInterval(interval);
+    } else {
+      setBalance(null);
+    }
+  }, [connected, publicKey, connection]);
+
+  // TODO: Fetch Drift position data (requires Drift SDK integration)
+  // For now showing placeholder position data
+  useEffect(() => {
+    if (connected && delegationActive) {
+      // Placeholder - will be replaced with actual Drift position query
+      setPosition({ size: 0, pnl: 0 });
+    } else {
+      setPosition({ size: 0, pnl: 0 });
+    }
+  }, [connected, delegationActive]);
+
   return (
     <Card className="rounded-2xl bg-[#11161C] border border-[#1E2937] p-4 mb-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
       <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-4">
