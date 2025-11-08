@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import React, { useState, useEffect } from 'react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -16,12 +17,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from './ui/alert-dialog';
-import { Activity, Power } from 'lucide-react';
+import { Activity, Power, Wallet, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const TopBar = ({ delegationActive, onRevoke, onEmergencyStop }) => {
   const { connected, publicKey } = useWallet();
+  const { connection } = useConnection();
   const [market, setMarket] = useState('SOL-PERP');
+  const [balance, setBalance] = useState(null);
+  const [position, setPosition] = useState({ size: 0, pnl: 0 });
 
   const handleEmergencyStop = () => {
     onEmergencyStop();
