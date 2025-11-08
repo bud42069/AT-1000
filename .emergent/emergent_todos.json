@@ -1,15 +1,7 @@
 [
   {
-    "content": "S3.7: Activity log persistence (Mongo) + Prometheus metrics",
-    "status": "completed"
-  },
-  {
-    "content": "S3.7a: Install prometheus-fastapi-instrumentator and expose /metrics",
-    "status": "completed"
-  },
-  {
     "content": "S3.7b.1: Managed signer from env/KMS (replace generated keypair)",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "content": "S3.7b.2: Helius webhook auth enforcement (secret verification + retry)",
