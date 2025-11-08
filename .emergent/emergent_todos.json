@@ -40,7 +40,15 @@
     "status": "completed"
   },
   {
-    "content": "Acceptance Test 1-7: Automated testing complete (100% pass rate), manual wallet testing documented",
+    "content": "Fix CRITICAL bug: API routes missing /api prefix causing 404 errors",
+    "status": "completed"
+  },
+  {
+    "content": "Fix CRITICAL bug: WebSocket URL malformed in App.js",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2 complete - all acceptance tests documented, bugs fixed, ready for user validation",
     "status": "completed"
   }
 ]
