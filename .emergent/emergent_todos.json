@@ -1,15 +1,15 @@
 [
   {
     "content": "Phase 3 Sprint 1: Create /app/workers/market_data/ directory structure",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Implement binance_trades_cvd.py - WebSocket aggTrade → 1m bars → Redis Stream",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Implement binance_book_top.py - WebSocket depth@100ms → TOB + 10bps depth → Redis",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "content": "Implement liquidations_multi.py - Binance/OKX/Bybit liquidations → Redis Stream",
@@ -21,7 +21,7 @@
   },
   {
     "content": "Set up Redis Streams infrastructure (install redis-py, configure streams)",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Create /app/backend/routers/guards.py - read from Redis, replace mock values",
@@ -33,11 +33,11 @@
   },
   {
     "content": "Add Parquet storage for trades/CVD/liquidations/OI/funding",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Update requirements.txt with redis, aioredis, pyarrow, fastparquet, websockets, aiohttp",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Test: All workers streaming to Redis → Guards endpoint returning live data",
