@@ -77,7 +77,7 @@ export const TopBar = ({ delegationActive, onRevoke, onEmergencyStop }) => {
     <Card className="rounded-2xl bg-[#11161C] border border-[#1E2937] p-4 mb-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
       <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-4">
         {/* Logo/Network - Left */}
-        <div className="md:col-span-3 flex items-center gap-3">
+        <div className="md:col-span-2 flex items-center gap-3">
           <Activity className="w-6 h-6 text-[#84CC16]" />
           <div>
             <h1 className="text-lg font-semibold text-[#C7D2DE]">Auto-Trader</h1>
@@ -85,8 +85,35 @@ export const TopBar = ({ delegationActive, onRevoke, onEmergencyStop }) => {
           </div>
         </div>
 
+        {/* Wallet Balance & Position - New Section */}
+        {connected && balance !== null && (
+          <div className="md:col-span-3 flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-[#0B0F14] rounded-xl px-3 py-2 border border-[#1E2937]">
+              <Wallet className="w-4 h-4 text-[#84CC16]" />
+              <div>
+                <div className="text-xs text-[#9AA6B2]">Balance</div>
+                <div className="text-sm font-mono font-semibold text-[#C7D2DE]">
+                  {balance} SOL
+                </div>
+              </div>
+            </div>
+            
+            {position.size !== 0 && (
+              <div className="flex items-center gap-2 bg-[#0B0F14] rounded-xl px-3 py-2 border border-[#1E2937]">
+                <TrendingUp className="w-4 h-4 text-[#84CC16]" />
+                <div>
+                  <div className="text-xs text-[#9AA6B2]">Position</div>
+                  <div className="text-sm font-mono font-semibold text-[#C7D2DE]">
+                    {position.size > 0 ? '+' : ''}{position.size.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Market Selector - Center */}
-        <div className="md:col-span-6 flex justify-center">
+        <div className={`${connected && balance !== null ? 'md:col-span-3' : 'md:col-span-6'} flex justify-center`}>
           <Select value={market} onValueChange={setMarket}>
             <SelectTrigger
               data-testid="market-selector"
@@ -103,7 +130,7 @@ export const TopBar = ({ delegationActive, onRevoke, onEmergencyStop }) => {
         </div>
 
         {/* Wallet + Delegation + Emergency Stop - Right */}
-        <div className="md:col-span-3 flex items-center justify-end gap-3 flex-wrap">
+        <div className="md:col-span-4 flex items-center justify-end gap-3 flex-wrap">
           {/* Delegation Badge */}
           {connected && (
             <div className="flex items-center gap-2">
