@@ -1,11 +1,11 @@
 [
   {
     "content": "Research Drift SDK delegation APIs and compute budget best practices via web search",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Set up project structure: backend/.env, workers/, frontend packages (Solana wallet adapters, recharts, d3, framer-motion)",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "content": "Create TypeScript POC script for Drift delegation (generate ephemeral key, setDelegate, place post-only, cancel/replace, SL/TP ladder)",
