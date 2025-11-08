@@ -32,14 +32,14 @@ async function fetchWithAuth(url, options = {}) {
  * Get risk guards
  */
 export async function getGuards() {
-  return fetchWithAuth('/engine/guards');
+  return fetchWithAuth('/api/engine/guards');
 }
 
 /**
  * Place order
  */
 export async function placeOrder(orderIntent) {
-  return fetchWithAuth('/engine/orders', {
+  return fetchWithAuth('/api/engine/orders', {
     method: 'POST',
     body: JSON.stringify(orderIntent),
   });
@@ -49,7 +49,7 @@ export async function placeOrder(orderIntent) {
  * Cancel order
  */
 export async function cancelOrder(orderId) {
-  return fetchWithAuth('/engine/cancel', {
+  return fetchWithAuth('/api/engine/cancel', {
     method: 'POST',
     body: JSON.stringify({ orderId }),
   });
@@ -59,7 +59,7 @@ export async function cancelOrder(orderId) {
  * Emergency kill switch
  */
 export async function killSwitch(reason) {
-  return fetchWithAuth('/engine/kill', {
+  return fetchWithAuth('/api/engine/kill', {
     method: 'POST',
     body: JSON.stringify({ reason }),
   });
@@ -69,21 +69,21 @@ export async function killSwitch(reason) {
  * Get activity log
  */
 export async function getActivity() {
-  return fetchWithAuth('/engine/activity');
+  return fetchWithAuth('/api/engine/activity');
 }
 
 /**
  * Get user settings
  */
 export async function getSettings(userId) {
-  return fetchWithAuth(`/settings?user_id=${userId}`);
+  return fetchWithAuth(`/api/settings?user_id=${userId}`);
 }
 
 /**
  * Update user settings
  */
 export async function updateSettings(settings) {
-  return fetchWithAuth('/settings', {
+  return fetchWithAuth('/api/settings/', {
     method: 'PUT',
     body: JSON.stringify(settings),
   });
@@ -93,5 +93,5 @@ export async function updateSettings(settings) {
  * Ping backend
  */
 export async function ping() {
-  return fetchWithAuth('/engine/ping');
+  return fetchWithAuth('/api/engine/ping');
 }
