@@ -29,11 +29,11 @@
   },
   {
     "content": "Test backend API endpoints (/api/engine/ping, /api/engine/kill)",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Verify frontend components render correctly after wallet connect",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "content": "Test POC + UI shell integration and call testing_agent for validation",
