@@ -7,7 +7,7 @@ import { PriceCVDPanel } from './components/PriceCVDPanel';
 import { ActivityLog } from './components/ActivityLog';
 import { ConsentModal } from './components/ConsentModal';
 import { Toaster, toast } from 'sonner';
-import { getActivity } from './lib/api';
+import { getActivity, killSwitch } from './lib/api';
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
