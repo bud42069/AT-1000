@@ -61,6 +61,7 @@ class BybitOIFunding:
         self.session: Optional[aiohttp.ClientSession] = None
         self.snapshots_buffer: List[FundingSnapshot] = []
         self.running = False
+        self.funding_interval_hours: int = 8  # Default, will be fetched from API
     
     async def connect_redis(self):
         """Connect to Redis"""
