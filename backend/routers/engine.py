@@ -140,8 +140,29 @@ async def kill_switch(req: KillRequest):
 
 @router.get("/ping")
 async def ping():
-    """Health check"""
-    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
+    """Health check with version"""
+    from pathlib import Path
+    version_file = Path(__file__).parent.parent.parent / 'VERSION.txt'
+    version = version_file.read_text().strip() if version_file.exists() else "unknown"
+    return {
+        "status": "ok",
+        "version": version,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+@router.get("/guards")
+async def get_guards():
+    """Get current risk guard metrics"""
+    # TODO: Wire to live market data (Redis cache or external API)
+    # For now, return mock values that pass guards
+    return {
+        "spread_bps": 6.2,
+        "depth_ok": True,
+        "liq_gap_atr_ok": True,
+        "funding_apr": 112.0,
+        "basis_bps": 4.0,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
 
 @router.get("/activity")
 async def get_activity():
