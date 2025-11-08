@@ -21,7 +21,7 @@
   },
   {
     "content": "DoD-6: Frontend delegate flow - setDelegate tx button, badge updates, revoke button, strategy toggle",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Add security: CORS lock, CSRF protection, rate limiting (5/min/wallet on /orders)",
@@ -33,7 +33,7 @@
   },
   {
     "content": "Acceptance Test 1: Delegation flow (create delegate → Active badge → revoke → Inactive)",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "content": "Acceptance Test 2: Signal→Order (VWAP reclaim → engine receives intent → post-only placed on Drift)",
