@@ -1,34 +1,18 @@
 [
   {
-    "content": "S2.5: Implement drift_liq_map.py - gPA scanner with oracle-based liquidation estimates",
-    "status": "completed"
-  },
-  {
-    "content": "S2.5b: Create GET /api/onchain/liq-map endpoint",
-    "status": "completed"
-  },
-  {
-    "content": "S2.6: Create GET /api/history/oi endpoint - OI history from Bybit worker",
-    "status": "completed"
-  },
-  {
-    "content": "S2.7: Create GET /api/history/liqs endpoint - liquidation heatmap data",
-    "status": "completed"
-  },
-  {
     "content": "S2.8: Build TelemetryCards.jsx - Spread, Depth, Funding APR, Basis, OI cards",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "S2.9: Build OIChart.jsx - Area chart with Recharts",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "S2.10: Build LiqHeatmap.jsx - D3.js price bucket heatmap",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "S2.11: Wire telemetry components to App.js and test end-to-end",
-    "status": "pending"
+    "status": "completed"
   }
 ]
