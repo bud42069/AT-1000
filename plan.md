@@ -1,4 +1,4 @@
-# Auto‑Trader dApp (Solana · Drift) — Development Plan (Updated Phase 2 - 85% Complete)
+# Auto‑Trader dApp (Solana · Drift) — Development Plan (Updated Phase 2 - 95% Complete)
 
 Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda5871969); public CEX data (Binance/Bybit/OKX); devnet execution + mainnet data; MVP E2E first (CVD+VWAP); Delegation primary, manual‑sign fallback. UI theme per design_guidelines.md (graphite #0B0F14 + lime #84CC16, Inter + IBM Plex Mono).
 
@@ -35,50 +35,26 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 
 ---
 
-### Phase 2 — V1 App Development (Status: ✅ 85% COMPLETE)
+### Phase 2 — V1 App Development (Status: ✅ 95% COMPLETE - Acceptance Testing Phase)
 **Goal:** Functional dApp UI + API + Engine worker wired with simplified signal integration and full security.
 
-**✅ COMPLETED WORK (DoD 1-5):**
+**✅ COMPLETED WORK (DoD 1-6 ALL COMPLETE):**
 
 #### DoD-1 & DoD-2: Drift Protocol Adapter ✅ COMPLETE
 **File:** `/app/workers/execution/driftAdapter.ts`
 
 **Implemented Methods:**
 - ✅ `setDelegate(delegatePublicKey)` - Set delegate authority with tx confirmation
-  - Creates updateUserDelegate instruction
-  - Waits for on-chain confirmation
-  - Returns transaction signature
 - ✅ `revokeDelegate()` - Revoke delegation by setting null address
-  - Sends revocation transaction
-  - Confirms on-chain
-  - Clears delegate authority
-- ✅ `placePostOnly(intent)` - Post-only limit orders
-  - Converts intent to Drift SDK types (BN, PRICE_PRECISION, BASE_PRECISION)
-  - Creates post-only limit order with direction, size, price
-  - Returns orderId and txSig
-- ✅ `placeStops(orderId, slPx, tps, totalSize, side)` - SL + TP ladder
-  - Places trigger_market stop-loss (full size)
-  - Places 3 trigger_limit take-profits (50%/30%/20% split)
-  - All reduce-only orders
+- ✅ `placePostOnly(intent)` - Post-only limit orders with Drift SDK types
+- ✅ `placeStops(orderId, slPx, tps, totalSize, side)` - SL + TP ladder (50%/30%/20% split)
 - ✅ `cancelAndReplace(orderId, newPx, intent)` - Atomic cancel + replace
-  - Cancels existing order by userOrderId
-  - Places new order with updated price
-  - Tracks attempt count
 - ✅ `closePositionMarket(symbol, slipBpsCap)` - Market close with slippage protection
-  - Gets current position from user account
-  - Calculates limit price with slippage cap
-  - Places reduce-only limit order
 - ✅ `moveStopToBreakeven(entryPrice, fees)` - Move SL to BE+fees after TP1
-  - Cancels existing stop-loss
-  - Places new stop at breakeven + estimated fees
-  - Maintains reduce-only flag
 - ✅ `cancelAllOrders()` - Kill switch order cancellation
-  - Iterates all open orders
-  - Cancels each with individual tx
-  - Returns array of transaction signatures
 - ✅ `getPosition(marketIndex)` - Query current position
 - ✅ `getOpenOrders()` - Query all open orders
-- ✅ `disconnect()` - Cleanup and unsubscribe from Drift client
+- ✅ `disconnect()` - Cleanup and unsubscribe
 
 **Integration:**
 - Uses Drift SDK v2.98.0+
@@ -92,268 +68,185 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 **Implemented Features:**
 - ✅ WebSocket connection to `wss://fstream.binance.com/ws/solusdt@aggTrade`
 - ✅ Real-time trade processing (price, quantity, buy/sell classification)
-- ✅ 1-minute bar aggregation:
-  - OHLC (open, high, low, close)
-  - Volume (total, buy, sell)
-  - CVD (Cumulative Volume Delta) = buyVolume - sellVolume
-  - VWAP (Volume-Weighted Average Price) from tick flow
-  - Trade count
+- ✅ 1-minute bar aggregation (OHLC, volume, CVD, VWAP, trade count)
 - ✅ Signal detection logic:
   - **Long-B**: Price crosses above VWAP + CVD rising for 3 bars
   - **Short-B**: Price crosses below VWAP + CVD falling for 3 bars
-- ✅ OrderIntent emission:
-  - Writes to `/app/data/signals/solusdt-1m.jsonl`
-  - Includes signal type, confirmation criteria, calculated intent
-  - ATR-based SL/TP calculation (1.5×/2×/3×/4× ATR distances)
+- ✅ OrderIntent emission to `/app/data/signals/solusdt-1m.jsonl`
+- ✅ ATR-based SL/TP calculation (1.5×/2×/3×/4× ATR distances)
 - ✅ Auto-reconnect on WebSocket disconnect (5s delay)
 - ✅ Graceful shutdown on SIGINT
-
-**Output Format:**
-```json
-{
-  "ts": 1730956800000,
-  "symbol": "SOLUSDT",
-  "signal": "longB",
-  "confirm": {
-    "vwap_reclaim": true,
-    "cvd_trend": "up"
-  },
-  "intent": {
-    "side": "long",
-    "limitPx": 25.50,
-    "size": 0,
-    "slPx": 24.00,
-    "tpPx": { "p1": 27.50, "p2": 29.00, "p3": 30.50 },
-    "leverage": 5
-  }
-}
-```
 
 #### DoD-4: Execution Engine & Risk Guards ✅ COMPLETE
 **File:** `/app/workers/execution/engine.ts`
 
 **Implemented Features:**
 - ✅ **ExecutionEngine class** - Full order lifecycle orchestration
-  - `initialize(walletKeypair)` - Connect to Drift via adapter
-  - `executeIntent(intent, collateralUsd)` - Main execution flow
-  - `onFill(orderId, intent)` - Handle fill and install SL/TP
-  - `onTP1Hit(orderId)` - Move SL to breakeven
-  - `cancelAndReplace(orderId, newPx, intent)` - Modify unfilled orders
-  - `killSwitch(reason)` - Emergency cancellation
-  - `shutdown()` - Cleanup
 - ✅ **Risk Guards** (`applyGuards` method):
-  - Leverage cap validation (vs MAX_LEVERAGE setting)
-  - Spread check (placeholder for < 10 bps)
-  - Depth check (placeholder for ≥ 50% median)
-  - Liq-gap check (placeholder for ≥ 4× ATR)
-  - Funding check (placeholder for < 500 APR)
-  - Basis check (placeholder for < 10 bps)
+  - Leverage cap validation
+  - Spread/depth/liq-gap/funding/basis framework
 - ✅ **Position Sizing** (`calculateSize` method):
   - Risk-based: `riskUsd / slDistance`
   - Leverage-based: `maxLeverageUsd / price`
-  - Takes minimum of both
-- ✅ **Attempt Tracking**:
-  - Tracks attempts per orderId in Map
-  - Enforces max 2 cancel/replace attempts
-  - Abandons order after limit
-- ✅ **Event Emission**:
-  - Logs to `/app/workers/engine-events.log`
-  - Event types: order_submitted, order_filled, order_rejected, stops_installed, sl_moved_to_be, order_replaced, order_abandoned, kill_switch
-  - Ready for WebSocket integration
+- ✅ **Attempt Tracking**: Max 2 cancel/replace attempts enforced
+- ✅ **Event Emission**: Logs to file, ready for WebSocket integration
 
 **Backend Guards Endpoint:**
 - ✅ `GET /api/engine/guards` - Returns current risk metrics
-  ```json
-  {
-    "spread_bps": 6.2,
-    "depth_ok": true,
-    "liq_gap_atr_ok": true,
-    "funding_apr": 112.0,
-    "basis_bps": 4.0,
-    "timestamp": "2025-11-08T04:33:30.561113+00:00"
-  }
-  ```
 - TODO: Wire to live market data (currently returns mock passing values)
 
 #### DoD-5: Backend Security & API ✅ COMPLETE
 
 **SIWS Authentication** (`/app/backend/auth/siws.py`):
-- ✅ `GET /api/auth/siws/challenge` - Generate challenge
-  - Creates random nonce (base58 encoded)
-  - 5-minute expiry
-  - Returns formatted message with nonce, exp, aud
-- ✅ `POST /api/auth/siws/verify` - Verify signature and issue JWT
-  - Validates nonce, exp, aud in signed message
-  - Verifies Ed25519 signature using PyNaCl
-  - Issues JWT with 12-hour TTL
-  - Includes wallet address, IP, iat, exp, aud, iss
-- ✅ `get_current_wallet(authorization)` - Auth dependency
-  - Extracts JWT from Authorization header
-  - Validates signature, expiry, audience
-  - Returns wallet public key
-  - Raises 401 on invalid/expired token
+- ✅ `GET /api/auth/siws/challenge` - Generate challenge with nonce
+- ✅ `POST /api/auth/siws/verify` - Verify Ed25519 signature and issue JWT
+- ✅ `get_current_wallet(authorization)` - Auth dependency for protected routes
 
 **WebSocket Manager** (`/app/backend/ws/manager.py`):
 - ✅ `WS /api/ws/engine.events` - Real-time event broadcasting
-  - Accepts WebSocket connections
-  - Maintains set of active clients
-  - Push-only (ignores incoming messages)
-  - Handles disconnects gracefully
-- ✅ `broadcast(event)` - Fanout function
-  - Sends JSON event to all connected clients
-  - Removes dead connections automatically
-  - Logs broadcast statistics
+- ✅ `broadcast(event)` - Fanout function to all connected clients
 
 **Security Enhancements** (`/app/backend/server.py`):
-- ✅ **CORS Configuration**:
-  - Restricted to `CORS_ORIGINS` env var
-  - Default: preview domain + localhost
-  - No credentials (JWT in headers only)
-  - Allowed methods: GET, POST, PUT, DELETE, OPTIONS
-  - Allowed headers: Authorization, Content-Type
-- ✅ **Rate Limiting**:
-  - FastAPILimiter initialized with Redis
-  - Graceful degradation if Redis unavailable
-  - Ready for per-endpoint limits (e.g., 5/min on /orders)
-- ✅ **Environment Variables**:
-  - `JWT_SECRET` - JWT signing key
-  - `FRONTEND_ORIGIN` - CORS allowed origin
-  - `ALLOWED_SYMBOLS` - Tradeable symbols (SOL-PERP)
-  - `CORS_ORIGINS` - Comma-separated allowed origins
+- ✅ **CORS**: Restricted to preview domain + localhost
+- ✅ **Rate Limiting**: FastAPILimiter with Redis (graceful degradation)
+- ✅ **Environment Variables**: JWT_SECRET, FRONTEND_ORIGIN, ALLOWED_SYMBOLS, CORS_ORIGINS
 
 **Enhanced Endpoints:**
-- ✅ `GET /api/engine/ping` - Health check with version
-  ```json
-  {
-    "status": "ok",
-    "version": "1.0.0-phase2",
-    "timestamp": "2025-11-08T04:33:20.649633+00:00"
-  }
-  ```
-- ✅ `GET /api/version` - Version info
-  ```json
-  {
-    "version": "1.0.0-phase2",
-    "env": "devnet"
-  }
-  ```
-- ✅ `GET /api/engine/guards` - Risk guard metrics (see DoD-4)
+- ✅ `GET /api/engine/ping` - Health check with version (1.0.0-phase2)
+- ✅ `GET /api/version` - Version info with env
+- ✅ `GET /api/engine/guards` - Risk guard metrics
 
 **Version Management:**
-- ✅ `/app/VERSION.txt` created - Contains `1.0.0-phase2`
-- ✅ Ping endpoint reads from VERSION.txt
-- ✅ Version endpoint reads from VERSION.txt
+- ✅ `/app/VERSION.txt` - Contains `1.0.0-phase2`
+- ✅ Endpoints read from VERSION.txt
 
-#### Frontend Libraries ✅ COMPLETE
+#### DoD-6: Frontend Integration ✅ COMPLETE
 
 **SIWS Client** (`/app/frontend/src/lib/siws.js`):
-- ✅ `siwsLogin(wallet)` - Full SIWS flow
-  - Fetches challenge from backend
-  - Prompts wallet.signMessage()
-  - Converts signature to base64 for JSON transport
-  - Verifies signature with backend
-  - Stores JWT in localStorage
-  - Returns { token, wallet }
-- ✅ `authHeaders()` - Get Authorization header
-  - Reads token from localStorage
-  - Returns { Authorization: "Bearer <token>" }
+- ✅ `siwsLogin(wallet)` - Full SIWS flow with bs58 encoding
+- ✅ `authHeaders()` - Get Authorization header from localStorage
 - ✅ `isAuthenticated()` - Client-side token validation
-  - Decodes JWT payload
-  - Checks expiry
 - ✅ `logout()` - Clear credentials
-  - Removes token and wallet from localStorage
 - ✅ `getStoredWallet()` - Get stored wallet address
 
 **API Client** (`/app/frontend/src/lib/api.js`):
 - ✅ `fetchWithAuth(url, options)` - Authenticated fetch wrapper
-  - Injects auth headers automatically
-  - Handles JSON parsing
-  - Throws descriptive errors
-- ✅ API Methods:
-  - `getGuards()` - Fetch risk guards
-  - `placeOrder(orderIntent)` - Place order
-  - `cancelOrder(orderId)` - Cancel order
-  - `killSwitch(reason)` - Emergency stop
-  - `getActivity()` - Fetch activity log
-  - `getSettings(userId)` - Get user settings
-  - `updateSettings(settings)` - Update settings
-  - `ping()` - Health check
+- ✅ All API methods: getGuards, placeOrder, cancelOrder, killSwitch, getActivity, getSettings, updateSettings, ping
+
+**Frontend UI Integration (User-Implemented):**
+- ✅ **SIWS Authentication**: Integrated with Phantom wallet connect
+- ✅ **Persisted Settings**: API wired to backend
+- ✅ **WebSocket Events**: Real-time engine events streaming
+- ✅ **Guard Polling**: Periodic polling with color-coded display
+- ✅ **Delegation Management**: Prompts and UI state management
+- ✅ **Strategy Controls**: Respects delegation status, disables when inactive
+- ✅ **Guards Panel**: Color-coded venue checks with tooltips
+- ✅ **bs58 Encoding**: Proper signature encoding for backend compatibility
 
 ---
 
-### 🔄 REMAINING WORK (DoD-6 - Frontend Integration)
+### 🔄 CURRENT PHASE: Acceptance Testing (5% Remaining)
 
-**Goal:** Wire frontend UI to backend APIs and complete E2E flow.
+**Goal:** Validate all features end-to-end on devnet and achieve 100% Phase 2 completion.
 
-#### Tasks:
-1. **SIWS Integration in App.js**
-   - Import `siwsLogin` from lib/siws.js
-   - Call on wallet connect (after Phantom connection)
-   - Show loading state during auth
-   - Store JWT and update UI state
-   - Handle auth errors with toast
+#### Acceptance Tests (AT-1 through AT-7):
 
-2. **Delegate Flow in ConsentModal**
-   - Add "Enable Delegation" button after terms acceptance
-   - Option A (Client-side): Import Drift SDK, call setDelegate directly
-   - Option B (Server-side): POST to `/api/drift/delegate/build`, sign returned tx
-   - Show transaction confirmation modal
-   - Update delegation badge on success
-   - Handle errors (insufficient SOL, tx failure)
+**AT-1: Authentication Flow** (Status: 🔄 IN PROGRESS)
+- Connect Phantom wallet
+- Complete SIWS authentication (challenge → sign → verify → JWT)
+- Verify JWT stored in localStorage
+- Verify Authorization header in API calls
+- Call `/api/engine/ping` with JWT → 200 response
+- **Pass Criteria**: JWT stored, auth headers present, ping returns version
 
-3. **Revoke Button in TopBar**
-   - Wire "Revoke" button to DriftAdapter.revokeDelegate
-   - Show confirmation dialog
-   - Submit revocation transaction
-   - Update badge to "Inactive" on success
-   - Disable strategy toggle when delegation revoked
+**AT-2: Delegation Flow** (Status: 📋 PENDING)
+- Accept terms in ConsentModal
+- Click "Enable Delegation"
+- Approve updateUserDelegate transaction in Phantom
+- Verify badge shows "Delegation: Active"
+- Click "Revoke" button
+- Approve revocation transaction
+- Verify badge shows "Delegation: Inactive"
+- **Pass Criteria**: Delegation tx confirms on devnet, badge updates correctly
 
-4. **Strategy Toggle Wiring**
-   - Connect toggle to `updateSettings()` API call
-   - Send { strategy_enabled: true/false }
-   - Show loading state during update
-   - Display success/error toast
-   - Disable toggle if delegation inactive
+**AT-3: Signal→Order Execution** (Status: 📋 PENDING)
+- Start `binance_cvd_vwap.ts` worker
+- Wait for VWAP reclaim signal (or manually append to jsonl)
+- Verify OrderIntent written to `/app/data/signals/solusdt-1m.jsonl`
+- Start execution engine
+- Verify engine receives intent
+- Verify post-only order placed on Drift devnet
+- Check order in Drift UI or via SDK
+- Verify ActivityLog shows "order_submitted" event
+- **Pass Criteria**: Order visible on-chain, events logged
 
-5. **WebSocket Integration**
-   - Connect to `wss://.../api/ws/engine.events` on component mount
-   - Listen for events: order_submitted, order_filled, order_cancelled, order_replaced, sl_hit, tp_hit, sl_moved_to_be, kill_switch
-   - Update ActivityLog state on each event
-   - Trigger toast notifications for each event type
-   - Handle reconnection on disconnect
+**AT-4: Cancel/Replace Logic** (Status: 📋 PENDING)
+- Place post-only order
+- Simulate price drift beyond tolerance
+- Verify engine cancels original order
+- Verify engine places new order with updated price
+- Check attempt count = 1
+- Simulate second drift → second cancel/replace
+- Simulate third drift → order abandoned (max 2 attempts)
+- **Pass Criteria**: Cancel/replace works, max attempts enforced, events logged
 
-6. **Real-time Badge Updates**
-   - Poll `/api/drift/status` or listen to WS for delegation state
-   - Update "Delegation: Active/Inactive" badge
-   - Show delegation address (truncated)
-   - Add tooltip with full address
+**AT-5: SL/TP Ladder & Breakeven** (Status: 📋 PENDING)
+- Place small order (0.1 SOL)
+- Force fill or wait for fill
+- Verify SL + TP ladder placed (4 orders: 1 SL + 3 TPs at 50%/30%/20%)
+- Simulate TP1 hit
+- Verify SL moved to breakeven + fees
+- Check ActivityLog for "stops_installed", "tp_hit", "sl_moved_to_be" events
+- **Pass Criteria**: Ladder visible on-chain, SL moves to BE after TP1
+
+**AT-6: Kill-Switch** (Status: 📋 PENDING)
+- Modify `/api/engine/guards` to return `spread_bps: 30` (over threshold)
+- Place orders
+- Verify engine calls kill-switch
+- Verify all open orders cancelled
+- Check ActivityLog for "kill_switch" event with reason "spread"
+- Verify strategy toggle disabled
+- **Pass Criteria**: Orders cancelled, kill-switch event logged with reason
+
+**AT-7: Event Persistence** (Status: 📋 PENDING)
+- Run AT-1 through AT-6
+- Call `GET /api/engine/activity`
+- Verify all events present in response
+- Check ActivityLog panel in UI
+- Verify all events displayed with correct timestamps, types, details, status badges
+- Verify events sorted newest-first
+- **Pass Criteria**: All events in API and UI, no duplicates/missing
 
 ---
 
 ### User Stories (Phase 2):
 1) ✅ As a user, I can authenticate with Phantom via SIWS and receive a JWT
-2) ✅ As a user, risk guards are enforced before every order (backend endpoint ready)
+2) ✅ As a user, risk guards are enforced before every order
 3) ✅ As a user, orders are placed via Drift SDK with proper SL/TP ladder
 4) ✅ As a user, signals are generated from live Binance data (CVD + VWAP)
-5) 🔄 As a user, I can enable delegation and see "Active" badge (frontend wiring pending)
-6) 🔄 As a user, I can toggle strategy on/off and orders execute automatically (integration pending)
-7) 🔄 As a user, I see real-time events in activity log via WebSocket (frontend wiring pending)
+5) ✅ As a user, I can enable delegation and see "Active" badge
+6) ✅ As a user, I can toggle strategy on/off
+7) ✅ As a user, I see real-time events in activity log via WebSocket
+8) 🔄 As a user, all features work end-to-end on devnet (acceptance testing)
 
 ---
 
 ### Acceptance Criteria (Phase 2):
-- ✅ SIWS authentication working (backend complete)
+- ✅ SIWS authentication working (frontend + backend complete)
 - ✅ Drift adapter can set/revoke delegate (TypeScript complete)
 - ✅ Risk guards endpoint returns metrics
 - ✅ Signal worker emits OrderIntent JSON
 - ✅ Execution engine orchestrates full order lifecycle
 - ✅ WebSocket manager broadcasts events
 - ✅ VERSION endpoint returns correct version
-- 🔄 Frontend connects wallet and completes SIWS (pending integration)
-- 🔄 Delegation transaction succeeds on devnet (pending frontend trigger)
-- 🔄 Strategy toggle enables/disables automation (pending wiring)
-- 🔄 Real orders placed on Drift devnet via delegate (pending E2E test)
-- 🔄 Activity log shows all events in real time (pending WS connection)
+- ✅ Frontend connects wallet and completes SIWS
+- ✅ Delegation transaction UI ready
+- ✅ Strategy toggle wired to backend
+- ✅ WebSocket events stream to ActivityLog
+- ✅ Guards panel displays risk metrics
+- 🔄 All acceptance tests pass (AT-1 through AT-7)
+- 🔄 Testing agent validates E2E (all tests GREEN)
+- 🔄 All bugs fixed (HIGH → MEDIUM → LOW priority)
 
 ---
 
@@ -396,11 +289,6 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
   - Attempt tracking with correlation IDs
   - Priority fee management (cluster analysis, optional Jito bundles)
   - Manual-sign fallback path (user approves each tx)
-- [ ] Revocation UX:
-  - Explicit Revoke button in TopBar (wire to DriftAdapter.revokeDelegate)
-  - On-chain revoke transaction confirmation
-  - Session invalidation in backend
-  - Audit log for all delegation changes
 - [ ] Observability:
   - Prometheus metrics export
   - Grafana dashboards (fills, errors, kill-switch, PnL)
@@ -427,7 +315,7 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 - [x] Test backend API endpoints
 - [x] Configure webpack polyfills for Solana wallet adapters
 
-**Phase 2 (🔄 85% COMPLETE):**
+**Phase 2 (🔄 95% COMPLETE - Acceptance Testing):**
 - [x] Complete Drift SDK integration (DriftAdapter with all methods)
 - [x] Create execution engine worker (ExecutionEngine class)
 - [x] Create simplified signal worker (Binance CVD + VWAP)
@@ -438,21 +326,26 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 - [x] Create frontend SIWS library (lib/siws.js)
 - [x] Create frontend API client (lib/api.js)
 - [x] Add VERSION endpoint
-- [ ] **Wire frontend to backend (DoD-6):**
-  - [ ] Connect SIWS login to wallet button
-  - [ ] Implement delegate transaction flow
-  - [ ] Wire strategy toggle to backend
-  - [ ] Connect WebSocket for real-time events
-  - [ ] Add toast notifications for engine events
-- [ ] **Run acceptance tests (1-6):**
-  - [ ] Test delegation flow on devnet
-  - [ ] Test signal→order E2E
-  - [ ] Test cancel/replace logic
-  - [ ] Test SL/TP ladder + BE move
-  - [ ] Test kill-switch
-  - [ ] Test activity log persistence
+- [x] **Wire frontend to backend (DoD-6):**
+  - [x] Connect SIWS login to wallet button
+  - [x] Implement delegate transaction flow
+  - [x] Wire strategy toggle to backend
+  - [x] Connect WebSocket for real-time events
+  - [x] Add toast notifications for engine events
+  - [x] Add guards panel with color-coded display
+  - [x] Implement bs58 signature encoding
+- [ ] **Run acceptance tests (AT-1 through AT-7):**
+  - [ ] AT-1: Test SIWS authentication flow
+  - [ ] AT-2: Test delegation flow on devnet
+  - [ ] AT-3: Test signal→order E2E
+  - [ ] AT-4: Test cancel/replace logic
+  - [ ] AT-5: Test SL/TP ladder + BE move
+  - [ ] AT-6: Test kill-switch
+  - [ ] AT-7: Test activity log persistence
 - [ ] Call testing_agent for comprehensive validation
-- [ ] Fix all bugs to green
+- [ ] Fix all bugs (HIGH → MEDIUM → LOW priority)
+- [ ] Verify all tests GREEN
+- [ ] **Phase 2 COMPLETE ✅**
 
 **Phase 3 (📋 NOT STARTED):**
 - [ ] Build Python asyncio data workers
@@ -470,331 +363,131 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 
 ---
 
-## 4) API & Event Contracts (v1.1 - Updated)
+## 4) API & Event Contracts (v1.2 - Updated)
 
 **REST Endpoints:**
 
 **Authentication:**
 - `GET /api/auth/siws/challenge` - Get SIWS challenge ✅
-  ```json
-  Response: {
-    "message": "AT-1000 wants you to sign in.\nnonce=...\nexp=...\naud=at-1000",
-    "nonce": "base58_nonce",
-    "exp": 1234567890
-  }
-  ```
 - `POST /api/auth/siws/verify` - Verify signature and get JWT ✅
-  ```json
-  Request: {
-    "publicKey": "base58_wallet_address",
-    "message": "AT-1000 wants you to sign in...",
-    "signature": "base64_signature",
-    "nonce": "base58_nonce"
-  }
-  Response: {
-    "token": "jwt_token",
-    "wallet": "base58_wallet_address"
-  }
-  ```
 
 **Engine:**
 - `GET /api/engine/ping` - Health check with version ✅
-  ```json
-  Response: {
-    "status": "ok",
-    "version": "1.0.0-phase2",
-    "timestamp": "2025-11-08T04:33:20.649633+00:00"
-  }
-  ```
 - `GET /api/engine/guards` - Get risk guard metrics ✅
-  ```json
-  Response: {
-    "spread_bps": 6.2,
-    "depth_ok": true,
-    "liq_gap_atr_ok": true,
-    "funding_apr": 112.0,
-    "basis_bps": 4.0,
-    "timestamp": "2025-11-08T04:33:30.561113+00:00"
-  }
-  ```
-- `POST /api/engine/orders` - Place order (requires JWT) 🔄
-  ```json
-  Request: {
-    "side": "long|short",
-    "type": "post_only_limit",
-    "px": 25.50,
-    "size": 10.0,
-    "sl": 24.50,
-    "tp1": 26.00,
-    "tp2": 26.50,
-    "tp3": 27.00,
-    "leverage": 5,
-    "venue": "drift",
-    "notes": "Optional notes"
-  }
-  Response: {
-    "orderId": "uuid",
-    "status": "submitted",
-    "timestamp": "2025-11-08T..."
-  }
-  ```
-- `POST /api/engine/cancel` - Cancel order (requires JWT)
-  ```json
-  Request: { "orderId": "uuid" }
-  Response: {
-    "message": "Order cancelled",
-    "orderId": "uuid"
-  }
-  ```
-- `POST /api/engine/kill` - Emergency stop (requires JWT)
-  ```json
-  Request: { "reason": "User-initiated emergency stop" }
-  Response: {
-    "message": "Kill switch activated",
-    "reason": "...",
-    "cancelled": 5
-  }
-  ```
-- `GET /api/engine/activity` - Get activity log
-  ```json
-  Response: {
-    "logs": [
-      {
-        "time": "2025-11-08T...",
-        "type": "order_submitted",
-        "details": "LONG 10 @ 25.50",
-        "status": "pending",
-        "statusBg": "#67E8F9"
-      }
-    ]
-  }
-  ```
+- `POST /api/engine/orders` - Place order (requires JWT) ✅
+- `POST /api/engine/cancel` - Cancel order (requires JWT) ✅
+- `POST /api/engine/kill` - Emergency stop (requires JWT) ✅
+- `GET /api/engine/activity` - Get activity log ✅
 
 **Settings:**
-- `GET /api/settings?user_id=<wallet>` - Get user settings
-- `PUT /api/settings` - Update user settings (requires JWT)
-  ```json
-  Request: {
-    "userId": "wallet_address",
-    "max_leverage": 10,
-    "risk_per_trade": 0.75,
-    "daily_drawdown_limit": 2.0,
-    "priority_fee_cap": 1000,
-    "delegate_enabled": true,
-    "strategy_enabled": true
-  }
-  ```
+- `GET /api/settings?user_id=<wallet>` - Get user settings ✅
+- `PUT /api/settings` - Update user settings (requires JWT) ✅
 
 **Version:**
 - `GET /api/version` - Get version info ✅
-  ```json
-  Response: {
-    "version": "1.0.0-phase2",
-    "env": "devnet"
-  }
-  ```
 
 **WebSocket:**
 - `WS /api/ws/engine.events` - Real-time engine events ✅
   - Connection: `wss://phantom-trader-4.preview.emergentagent.com/api/ws/engine.events`
   - Events: `order_submitted`, `order_filled`, `order_cancelled`, `order_replaced`, `sl_hit`, `tp_hit`, `sl_moved_to_be`, `error`, `kill_switch`
-  - Format:
-    ```json
-    {
-      "type": "order_submitted",
-      "timestamp": "2025-11-08T...",
-      "data": {
-        "orderId": "uuid",
-        "side": "long",
-        "px": 25.50,
-        "size": 10.0
-      }
-    }
-    ```
 
-**Signals Output (Phase 2):**
+**Signals Output:**
 - `/app/data/signals/solusdt-1m.jsonl` ✅
-  ```json
-  {
-    "ts": 1730956800000,
-    "symbol": "SOLUSDT",
-    "signal": "longB",
-    "confirm": {
-      "vwap_reclaim": true,
-      "cvd_trend": "up"
-    },
-    "intent": {
-      "side": "long",
-      "limitPx": 25.50,
-      "size": 0,
-      "slPx": 24.00,
-      "tpPx": { "p1": 27.50, "p2": 29.00, "p3": 30.50 },
-      "leverage": 5
-    }
-  }
-  ```
 
 ---
 
 ## 5) Next Actions (Immediate - Complete Phase 2)
 
-**Priority 1 (Critical Path - DoD-6):**
+**Priority 1 (Critical Path - Acceptance Testing):**
 
-1. **Frontend SIWS Integration (2-3 hours):**
-   - Import `siwsLogin()` in App.js
-   - Call on wallet connect after Phantom connection
-   - Add loading states during auth (spinner + "Authenticating...")
-   - Store JWT and update authenticated state
-   - Handle errors with toast notifications
-   - Test with Phantom wallet on devnet
-
-2. **Frontend Delegate Flow (3-4 hours):**
-   - Add "Enable Delegation" button in ConsentModal after terms acceptance
-   - **Option A (Recommended)**: Client-side Drift SDK
-     - Import Drift SDK in frontend
-     - Call `driftClient.updateUserDelegate(delegatePubkey)`
-     - Prompt Phantom to sign transaction
-   - **Option B**: Server-built transaction
-     - Create `/api/drift/delegate/build` endpoint
-     - Return base64-encoded transaction
-     - Sign and send via Phantom
-   - Update delegation badge on confirmation
-   - Add error handling (insufficient SOL, tx failure, user rejection)
-   - Test delegation flow on devnet
-
-3. **Frontend Strategy Toggle (1-2 hours):**
-   - Wire toggle switch to `updateSettings()` API call
-   - Show loading spinner during update
-   - Display success toast: "Strategy enabled" / "Strategy disabled"
-   - Display error toast on failure
-   - Disable toggle if delegation inactive
-   - Test toggle with backend settings API
-
-4. **Frontend WebSocket Integration (2-3 hours):**
-   - Connect to `wss://.../api/ws/engine.events` on App mount
-   - Use `useEffect` with cleanup on unmount
-   - Listen for all event types (order_submitted, order_filled, etc.)
-   - Update ActivityLog state on each event
-   - Trigger Sonner toast for each event:
-     - order_submitted: Info toast (cyan)
-     - order_filled: Success toast (lime)
-     - order_cancelled: Warning toast (amber)
-     - sl_hit / tp_hit: Info toast
-     - kill_switch: Error toast (rose)
-   - Handle reconnection on disconnect (exponential backoff)
-   - Test with mock events from backend
-
-5. **Real-time Badge Updates (1 hour):**
-   - Add `/api/drift/status` endpoint (returns delegate address or null)
-   - Poll on mount and after delegation changes
-   - Update badge: "Delegation: Active" (lime) / "Inactive" (gray)
-   - Show truncated delegate address in tooltip
-   - Test badge updates after delegate/revoke
-
-**Estimated Total Time for DoD-6:** 9-13 hours of focused development
-
----
-
-**Priority 2 (Acceptance Tests - 4-6 hours):**
-
-6. **Run Acceptance Tests 1-6:**
-   
-   **AT-1: Delegation Flow (1 hour)**
+1. **Run AT-1: SIWS Authentication (30 min):**
+   - Open preview URL in browser
    - Connect Phantom wallet
-   - Complete SIWS authentication
+   - Complete SIWS flow
+   - Verify JWT in localStorage
+   - Test API calls with Authorization header
+   - Call `/api/engine/ping` → verify 200 response with version
+
+2. **Run AT-2: Delegation Flow (1 hour):**
    - Accept terms in ConsentModal
    - Click "Enable Delegation"
-   - Confirm transaction in Phantom
+   - Approve transaction in Phantom
    - Verify badge shows "Active"
    - Click "Revoke"
-   - Confirm revocation transaction
+   - Approve revocation
    - Verify badge shows "Inactive"
-   - **Pass Criteria**: Badge updates correctly, transactions confirm on devnet
-   
-   **AT-2: Signal→Order (1-2 hours)**
-   - Start `binance_cvd_vwap.ts` worker
-   - Wait for VWAP reclaim signal (or simulate)
-   - Verify OrderIntent written to `/app/data/signals/solusdt-1m.jsonl`
-   - Start execution engine
-   - Verify engine receives intent
-   - Verify post-only order placed on Drift devnet
-   - Check order in Drift UI or via SDK query
-   - **Pass Criteria**: Order visible on-chain, activity log shows "order_submitted"
-   
-   **AT-3: Modify/Replace (1 hour)**
-   - Place post-only order
-   - Simulate price drift beyond tolerance (modify market price mock)
-   - Verify engine cancels original order
-   - Verify engine places new order with updated price
-   - Check attempt count (should be 1)
-   - Simulate second drift
-   - Verify second cancel/replace
-   - Simulate third drift
-   - Verify order abandoned (max 2 attempts)
-   - **Pass Criteria**: Cancel/replace works, attempt limit enforced, activity log shows "order_replaced" and "order_abandoned"
-   
-   **AT-4: Stops/Targets (1-2 hours)**
-   - Place small order with tiny size (e.g., 0.1 SOL)
-   - Force fill (market order or wait)
-   - Verify SL + TP ladder placed (query open orders)
-   - Simulate TP1 hit (price reaches tp1)
+
+3. **Run AT-3: Signal→Order (1-2 hours):**
+   - Start Binance signal worker: `cd /app/workers && yarn ts-node signals/binance_cvd_vwap.ts`
+   - Monitor signal output: `tail -f /app/data/signals/solusdt-1m.jsonl`
+   - Enable strategy toggle
+   - Wait for signal (or manually append)
+   - Verify order placed on Drift devnet
+   - Check ActivityLog for "order_submitted"
+
+4. **Run AT-4: Cancel/Replace (1 hour):**
+   - Place order via engine
+   - Simulate price drift
+   - Verify cancel/replace executes (attempt 1)
+   - Simulate second drift (attempt 2)
+   - Simulate third drift → abandoned
+   - Verify events in ActivityLog
+
+5. **Run AT-5: SL/TP Ladder (1-2 hours):**
+   - Place small order (0.1 SOL)
+   - Force fill
+   - Verify 4 orders exist (1 SL + 3 TPs)
+   - Simulate TP1 hit
    - Verify SL moved to BE+fees
-   - Check activity log for "tp_hit" and "sl_moved_to_be" events
-   - **Pass Criteria**: SL/TP ladder visible on-chain, SL moves to BE after TP1
-   
-   **AT-5: Kill-switch (30 min)**
-   - Modify `/api/engine/guards` to return `spread_bps: 30` (over 25 bps threshold)
-   - Place order
-   - Verify engine calls kill-switch
-   - Verify all open orders cancelled
-   - Check activity log for "kill_switch" event with reason "spread"
-   - **Pass Criteria**: Orders cancelled, kill-switch event logged
-   
-   **AT-6: Persistence (30 min)**
-   - Run all previous tests
+   - Check ActivityLog events
+
+6. **Run AT-6: Kill-Switch (30 min):**
+   - Modify guards endpoint: `spread_bps: 30`
+   - Place orders
+   - Verify kill-switch triggers
+   - Verify all orders cancelled
+   - Check ActivityLog for "kill_switch" event
+
+7. **Run AT-7: Persistence (30 min):**
    - Call `GET /api/engine/activity`
-   - Verify all events present in response
-   - Check ActivityLog panel in UI
-   - Verify all events displayed with correct timestamps and statuses
-   - **Pass Criteria**: All events persisted in MongoDB and visible in UI
+   - Verify all events from AT-1 through AT-6 present
+   - Check ActivityLog UI
+   - Verify timestamps, types, details correct
+
+**Estimated Total Time for Acceptance Tests:** 4-6 hours
 
 ---
 
-**Priority 3 (Testing & Polish - 4-6 hours):**
+**Priority 2 (Testing & Bug Fixes):**
 
-7. **Call testing_agent for Comprehensive Validation (2-3 hours):**
-   - Provide complete context (original problem statement, features built, files of reference)
+8. **Call testing_agent for Comprehensive Validation (2-3 hours):**
+   - Provide complete context from PHASE2_CLOSEOUT.md
    - Specify testing type: both backend and frontend
-   - List all features to test (SIWS, delegation, strategy toggle, order placement, SL/TP, kill-switch, activity log)
-   - Provide required credentials (HELIUS_API_KEY, test wallet keypair)
-   - Review test report JSON
-   - Fix all high-priority bugs
-   - Fix all medium-priority bugs
-   - Fix all low-priority bugs (do not skip any)
+   - List all features to test
+   - Provide required credentials
+   - Review test report: `/app/test_reports/iteration_X.json`
+   - Fix all HIGH priority bugs
+   - Fix all MEDIUM priority bugs
+   - Fix all LOW priority bugs (do not skip)
+   - Re-run testing agent if major fixes applied
+   - Verify all tests GREEN
 
-8. **Bug Fixes & Error Handling (2-3 hours):**
+9. **Bug Fixes & Error Handling (2-3 hours):**
    - Add try-catch blocks in all async functions
    - Improve error messages (user-friendly)
    - Add retry logic for network failures
-   - Add timeout handling for long-running operations
+   - Add timeout handling
    - Test error paths (wallet disconnect, tx failure, insufficient SOL)
 
-9. **UI/UX Polish (2-3 hours):**
-   - Add skeleton loaders for data fetching states
-   - Improve button hover/active states
-   - Add micro-animations (150ms ease-out)
-   - Improve toast notification styling (match design theme)
-   - Add empty states for ActivityLog
-   - Add loading states for all buttons
-   - Test responsiveness (mobile, tablet, desktop)
-
-10. **Documentation (1-2 hours):**
+10. **Final Polish & Documentation (1-2 hours):**
     - Update README with setup instructions
     - Add environment variable documentation
     - Add API endpoint documentation
     - Add worker startup instructions
     - Add testing instructions
     - Add troubleshooting section
+
+**Estimated Total Time for Testing & Polish:** 5-8 hours
 
 ---
 
@@ -807,21 +500,24 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 - [x] All components present
 - [x] Webpack compiles without errors
 
-**Phase 2 (Target - 85% Complete → 100%):**
+**Phase 2 (Target - 95% Complete → 100%):**
 - [x] Drift adapter complete (all methods implemented)
 - [x] Execution engine complete (risk guards, sizing, lifecycle)
 - [x] Signal worker complete (Binance CVD+VWAP)
-- [x] SIWS authentication working (backend complete)
-- [x] WebSocket manager ready (backend complete)
+- [x] SIWS authentication working (backend + frontend complete)
+- [x] WebSocket manager ready (backend + frontend complete)
 - [x] VERSION endpoint returns correct version
 - [x] Guards endpoint returns risk metrics
-- [ ] Frontend SIWS integration (wallet connect → JWT)
-- [ ] Delegation transaction works on devnet
-- [ ] Strategy toggle wired to backend
-- [ ] WebSocket events display in activity log
-- [ ] Toast notifications for all events
-- [ ] All 6 acceptance tests pass
-- [ ] Testing agent validates E2E (green)
+- [x] Frontend SIWS integration (wallet connect → JWT)
+- [x] Delegation transaction UI complete
+- [x] Strategy toggle wired to backend
+- [x] WebSocket events display in activity log
+- [x] Toast notifications for all events
+- [x] Guards panel with color-coded display
+- [ ] All 7 acceptance tests pass (AT-1 through AT-7)
+- [ ] Testing agent validates E2E (all tests GREEN)
+- [ ] All bugs fixed (HIGH → MEDIUM → LOW priority)
+- [ ] **Phase 2 COMPLETE ✅**
 
 **Phase 3 (Target):**
 - [ ] Minute signals populated from CEX data
@@ -833,7 +529,6 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 - [ ] All guards enforce limits with live data
 - [ ] Daily stop halts trading
 - [ ] Priority fee caps applied
-- [ ] Revocation UX complete
 - [ ] Observability dashboards green
 - [ ] Mainnet tiny-size post-only passes
 
@@ -886,63 +581,62 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 
 ---
 
-## 8) File Structure (Current - Phase 2 Complete)
+## 8) File Structure (Current - Phase 2 95% Complete)
 
 ```
 /app/
 ├── VERSION.txt                     # ✅ 1.0.0-phase2
+├── PHASE2_CLOSEOUT.md              # ✅ Detailed acceptance test plan
+├── github-issues-setup.sh          # ✅ GitHub issues automation script
 ├── backend/
-│   ├── .env                        # ✅ Updated with JWT_SECRET, CORS_ORIGINS, security vars
-│   ├── server.py                   # ✅ Enhanced with SIWS, WS, rate limiting, VERSION endpoint
-│   ├── requirements.txt            # ✅ Updated with PyJWT, PyNaCl, base58, fastapi-limiter
+│   ├── .env                        # ✅ All security vars configured
+│   ├── server.py                   # ✅ Complete with SIWS, WS, rate limiting
+│   ├── requirements.txt            # ✅ All dependencies installed
 │   ├── auth/
-│   │   ├── __init__.py
-│   │   └── siws.py                 # ✅ SIWS authentication (challenge, verify, get_current_wallet)
+│   │   └── siws.py                 # ✅ SIWS authentication complete
 │   ├── ws/
-│   │   ├── __init__.py
-│   │   └── manager.py              # ✅ WebSocket event manager (broadcast, client management)
+│   │   └── manager.py              # ✅ WebSocket event manager
 │   └── routers/
-│       ├── __init__.py
-│       ├── engine.py               # ✅ Enhanced with guards endpoint, VERSION in ping
-│       └── settings.py             # ✅ User settings endpoints
+│       ├── engine.py               # ✅ All endpoints with guards
+│       └── settings.py             # ✅ User settings persistence
 ├── frontend/
 │   ├── .env                        # ✅ REACT_APP_BACKEND_URL
-│   ├── package.json                # ✅ Dependencies (+ tweetnacl, tweetnacl-util)
-│   ├── craco.config.js             # ✅ Webpack polyfills (crypto, stream, buffer, process)
+│   ├── package.json                # ✅ All dependencies (+ tweetnacl)
+│   ├── craco.config.js             # ✅ Webpack polyfills configured
 │   ├── public/
-│   │   └── index.html              # ✅ Google Fonts (Inter, IBM Plex Mono)
+│   │   └── index.html              # ✅ Fonts loaded
 │   └── src/
-│       ├── index.css               # ✅ Design tokens (graphite + lime theme)
-│       ├── App.js                  # ✅ Main app (needs SIWS wiring, delegate flow, WS)
+│       ├── index.css               # ✅ Design tokens complete
+│       ├── App.js                  # ✅ Full integration (SIWS, WS, guards, delegation)
 │       ├── lib/
-│       │   ├── siws.js             # ✅ SIWS client library (login, auth, logout)
-│       │   └── api.js              # ✅ API client with auth (all endpoints wrapped)
+│       │   ├── siws.js             # ✅ SIWS client with bs58 encoding
+│       │   └── api.js              # ✅ Complete API client
 │       ├── contexts/
 │       │   └── WalletContext.jsx   # ✅ Solana wallet provider
 │       └── components/
-│           ├── TopBar.jsx          # ✅ Header (needs delegate/revoke buttons wired)
-│           ├── StrategyControls.jsx # ✅ Settings (needs strategy toggle wired)
-│           ├── ActivityLog.jsx     # ✅ Event log (needs WS integration)
-│           ├── PriceCVDPanel.jsx   # ✅ Chart (mock data, needs real stream)
-│           ├── ConsentModal.jsx    # ✅ Terms (needs delegate flow button)
+│           ├── TopBar.jsx          # ✅ Delegation badge + controls
+│           ├── StrategyControls.jsx # ✅ Strategy toggle wired
+│           ├── ActivityLog.jsx     # ✅ Real-time event display
+│           ├── PriceCVDPanel.jsx   # ✅ Chart with mock data
+│           ├── ConsentModal.jsx    # ✅ Terms + delegation flow
 │           └── ui/                 # ✅ Shadcn components
 ├── workers/
-│   ├── package.json                # ✅ TypeScript + Drift SDK + Solana deps
+│   ├── package.json                # ✅ TypeScript + Drift SDK
 │   ├── tsconfig.json               # ✅ TypeScript config
-│   ├── poc-delegation.ts           # ✅ POC script scaffold
+│   ├── poc-delegation.ts           # ✅ POC script
 │   ├── engine-events.log           # ✅ Generated by ExecutionEngine
 │   ├── execution/
-│   │   ├── driftAdapter.ts         # ✅ Complete Drift adapter (all methods)
-│   │   └── engine.ts               # ✅ Execution engine (guards, sizing, lifecycle)
+│   │   ├── driftAdapter.ts         # ✅ Complete Drift adapter
+│   │   └── engine.ts               # ✅ Execution engine
 │   └── signals/
-│       └── binance_cvd_vwap.ts     # ✅ Signal worker (CVD + VWAP strategy)
+│       └── binance_cvd_vwap.ts     # ✅ Signal worker
 ├── data/
 │   └── signals/                    # ✅ Signal output directory
 │       └── solusdt-1m.jsonl        # ✅ Generated by signal worker
 ├── storage/
 │   └── parquet/                    # 📋 TODO: Phase 3
 ├── design_guidelines.md            # ✅ Complete design spec
-└── plan.md                         # ✅ This file (updated to 85% complete)
+└── plan.md                         # ✅ This file (updated to 95%)
 ```
 
 ---
@@ -953,17 +647,17 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 - `MAX_LEVERAGE=10` (hard cap)
 - `RISK_PER_TRADE_BP=75` (0.75% of account equity)
 - `DAILY_STOP_PCT=2` (2% daily drawdown limit)
-- `PRIORITY_FEE_MICROLAMPORTS=1000` (1000 microlamports per CU)
+- `PRIORITY_FEE_MICROLAMPORTS=1000`
 - `JWT_SECRET` (12-hour session TTL)
 - `CORS_ORIGINS` (restricted to preview domain + localhost)
 - `ALLOWED_SYMBOLS=SOL-PERP`
 
 **Phase 2 Guards (Implemented):**
-- ✅ Leverage cap validation (ExecutionEngine)
-- ✅ Post-only order requirement (DriftAdapter)
-- ✅ Max 2 cancel/replace attempts (ExecutionEngine)
-- ✅ Risk-based position sizing (ExecutionEngine)
-- ✅ Guards endpoint framework (/api/engine/guards)
+- ✅ Leverage cap validation
+- ✅ Post-only order requirement
+- ✅ Max 2 cancel/replace attempts
+- ✅ Risk-based position sizing
+- ✅ Guards endpoint framework
 - ✅ Spread/depth/liq-gap/funding/basis checks (framework ready, mock values)
 - 🔄 Live market data integration (Phase 3)
 
@@ -998,38 +692,37 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 ## 11) Known Issues & Limitations
 
 **Current Limitations:**
-1. **Redis Optional**: Rate limiting gracefully degrades if Redis unavailable (logged warning)
-2. **Guards Mock Data**: `/api/engine/guards` returns mock passing values (needs live data integration)
+1. **Redis Optional**: Rate limiting gracefully degrades if Redis unavailable
+2. **Guards Mock Data**: `/api/engine/guards` returns mock passing values (needs live data)
 3. **Signal Worker Standalone**: Must be run manually, not integrated with engine yet
-4. **Frontend Not Wired**: DoD-6 pending (SIWS, delegate flow, WS, strategy toggle)
-5. **No Mainnet Testing**: All testing on devnet only
-6. **Manual Size Calculation**: Engine uses fixed collateralUsd parameter (needs real account balance query)
+4. **No Mainnet Testing**: All testing on devnet only
+5. **Manual Size Calculation**: Engine uses fixed collateralUsd parameter (needs real account balance)
 
 **Technical Debt:**
-1. Error handling could be more granular (specific error types)
+1. Error handling could be more granular
 2. Logging needs correlation IDs for distributed tracing
 3. No retry logic for transient RPC failures
 4. No circuit breaker for external API calls
-5. Frontend mock data in PriceCVDPanel (needs real Binance stream)
 
 ---
 
 ## 12) Testing Strategy
 
 **Unit Tests (Not Implemented):**
-- DriftAdapter methods (setDelegate, placePostOnly, etc.)
+- DriftAdapter methods
 - ExecutionEngine guards and sizing logic
-- Signal worker CVD calculation and trend detection
+- Signal worker CVD calculation
 - SIWS signature verification
 - JWT token validation
 
 **Integration Tests (Manual - Acceptance Tests):**
-- AT-1: Delegation flow
-- AT-2: Signal→Order E2E
-- AT-3: Modify/Replace logic
-- AT-4: Stops/Targets + BE move
-- AT-5: Kill-switch
-- AT-6: Persistence
+- AT-1: SIWS Authentication
+- AT-2: Delegation flow
+- AT-3: Signal→Order E2E
+- AT-4: Cancel/Replace logic
+- AT-5: SL/TP Ladder + BE move
+- AT-6: Kill-switch
+- AT-7: Event Persistence
 
 **E2E Tests (Via testing_agent):**
 - Full flow from wallet connect to order execution
@@ -1044,8 +737,8 @@ Context (locked): Helius RPC/Webhooks (API key: 625e29ab-4bea-4694-b7d8-9fdda587
 
 ---
 
-**Last Updated:** 2025-11-08 04:40 UTC  
-**Current Phase:** Phase 2 (V1 App Development) - 85% COMPLETE  
-**Next Milestone:** Complete DoD-6 (frontend delegate flow + WS integration) + run all 6 acceptance tests  
-**Estimated Completion:** Phase 2 can be completed in 9-13 hours of focused development + 4-6 hours testing = **13-19 hours total**  
-**Ready for:** Frontend integration sprint → Acceptance testing → Testing agent validation → Phase 2 COMPLETE ✅
+**Last Updated:** 2025-11-08 05:40 UTC  
+**Current Phase:** Phase 2 (V1 App Development) - 95% COMPLETE (Acceptance Testing Phase)  
+**Next Milestone:** Run AT-1 through AT-7 → Testing agent validation → Fix all bugs → Phase 2 COMPLETE ✅  
+**Estimated Completion:** 4-6 hours acceptance testing + 5-8 hours validation & polish = **9-14 hours total**  
+**Ready for:** Acceptance testing sprint → Testing agent validation → Bug fixes → Phase 2 COMPLETE ✅
