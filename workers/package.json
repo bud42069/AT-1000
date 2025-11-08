@@ -1,0 +1,21 @@
+{
+  "name": "drift-autotrader-workers",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "poc": "node --loader ts-node/esm poc-delegation.ts"
+  },
+  "dependencies": {
+    "@drift-labs/sdk": "^2.98.0",
+    "@solana/web3.js": "^1.95.8",
+    "dotenv": "^16.4.7",
+    "ws": "^8.18.0",
+    "redis": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.13",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
