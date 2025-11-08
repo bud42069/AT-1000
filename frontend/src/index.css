@@ -115,3 +115,39 @@ body::before {
   outline: 1.5px solid #84CC16;
   outline-offset: 2px;
 }
+
+/* Wallet Adapter Button Overrides - Design System Compliance */
+.wallet-adapter-button-trigger {
+  background-color: #84CC16 !important;
+  color: #0B0F14 !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  border-radius: 0.75rem !important;
+  padding: 0.625rem 1.25rem !important;
+  transition: all 120ms ease-out !important;
+  box-shadow: 0 6px 18px rgba(132, 204, 22, 0.18) !important;
+}
+
+.wallet-adapter-button-trigger:hover {
+  background-color: #A3E635 !important;
+  color: #0B0F14 !important;
+  box-shadow: 0 8px 24px rgba(132, 204, 22, 0.28) !important;
+  transform: translateY(-1px);
+}
+
+.wallet-adapter-button-trigger:active {
+  background-color: #65A30D !important;
+  transform: translateY(0);
+}
+
+.wallet-adapter-button:not([disabled]):hover {
+  background-color: #A3E635 !important;
+}
+
+.wallet-adapter-button {
+  background-color: #84CC16 !important;
+  color: #0B0F14 !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  border-radius: 0.75rem !important;
+}
