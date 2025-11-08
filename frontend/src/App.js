@@ -100,8 +100,8 @@ function AppContent() {
     if (connected) {
       const fetchLogs = async () => {
         try {
-          const response = await axios.get(`${BACKEND_URL}/engine/activity`);
-          setActivityLogs(response.data.logs || []);
+          const response = await getActivity();
+          setActivityLogs(response.logs || []);
         } catch (err) {
           console.error('Failed to fetch logs:', err);
         }
