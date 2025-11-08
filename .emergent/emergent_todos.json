@@ -1,22 +1,18 @@
 [
   {
-    "content": "S3.2: Implement delegation backend endpoints (POST /api/delegate/set, /api/delegate/revoke)",
-    "status": "completed"
+    "content": "S3.3: Build ExecutionEngine main loop - consume Redis intents, preflight guards, DriftAdapter calls",
+    "status": "in_progress"
   },
   {
-    "content": "S3.2b: Build DelegateFlow.tsx frontend component with tx signing",
-    "status": "completed"
-  },
-  {
-    "content": "S3.3: Build ExecutionEngine worker - post-only → monitor → cancel/replace",
+    "content": "S3.3b: Implement intent schema and POST /api/engine/intents endpoint",
     "status": "pending"
   },
   {
-    "content": "S3.4: Wire live guards to execution engine - block trades on threshold breach",
+    "content": "S3.4: Wire live guards preflight - block on spread/depth/funding/basis/liq thresholds",
     "status": "pending"
   },
   {
-    "content": "S3.5: Implement SL/TP ladder + ATR trail on fills",
+    "content": "S3.5: Implement SL/TP ladder (50%/30%/20%) + TP1→BE+fees + ATR trail",
     "status": "pending"
   },
   {
@@ -24,7 +20,11 @@
     "status": "pending"
   },
   {
-    "content": "S3.7: Activity log + Prometheus metrics integration",
+    "content": "S3.7: Activity log persistence (Mongo) + Prometheus metrics",
+    "status": "pending"
+  },
+  {
+    "content": "S3.7b: Hardening - managed signer (env/KMS), Helius auth model, funding interval from API",
     "status": "pending"
   },
   {
