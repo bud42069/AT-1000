@@ -1,7 +1,10 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Depends
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from redis.asyncio import from_url as redis_from_url
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 import os
 import logging
 from pathlib import Path
@@ -20,7 +23,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get('DB_NAME', 'autotrader')]
 
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(title="AT-1000 Auto-Trader Backend", version="1.0.0-phase2")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
