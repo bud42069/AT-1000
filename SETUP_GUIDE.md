@@ -38,38 +38,19 @@ yarn install
 ## Environment Configuration
 
 ### 1. Backend Environment Variables
-Create or update `/app/backend/.env`:
+**Your `backend/.env` is already configured with:**
 
 ```bash
-# MongoDB (already configured)
-MONGO_URL=mongodb://localhost:27017/autotrader
-
-# Redis (NEW - required for live data)
+MONGO_URL=mongodb://127.0.0.1:27017/at1000
 REDIS_URL=redis://localhost:6379
-
-# JWT Secret (already configured)
-JWT_SECRET=your-secret-key-here
-
-# Helius RPC (already configured)
+JWT_SECRET=a50241458bc8be29ebd6807a550ccc2eac6bf8a97cc9b983baf7a5cc681c2206
+HELIUS_WEBHOOK_SECRET=9f6219583904f10b18eb617212f642bb624ecef090888115147c974424a0ca9b
 HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=625e29ab-4bea-4694-b7d8-9fdda5871969
-
-# Helius Webhook Secret (NEW - for webhook auth)
-HELIUS_WEBHOOK_SECRET=your-webhook-secret-here
-
-# Delegate Keypair (NEW - required for automated trading)
-# Generate: solana-keygen new --no-outfile
-# Copy the base58 private key (first array in output)
-DELEGATE_PRIVATE_KEY=your-base58-private-key-here
-
-# CORS
+DELEGATE_PRIVATE_KEY=  # Add later when ready for automated trading
 CORS_ORIGINS=http://localhost:3000,https://solana-autotrader-3.preview.emergentagent.com
-
-# Allowed trading symbols
-ALLOWED_SYMBOLS=SOL-PERP,BTC-PERP,ETH-PERP
-
-# Frontend origin
-FRONTEND_ORIGIN=http://localhost:3000
 ```
+
+**Note:** DELEGATE_PRIVATE_KEY is empty - add when you generate your keypair (step below)
 
 ### 2. Generate Delegate Keypair
 
