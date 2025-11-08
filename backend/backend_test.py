@@ -229,7 +229,7 @@ class BackendAPITester:
         return self.run_test(
             "Update Settings",
             "PUT",
-            "/api/settings",
+            "/api/settings/",  # Note: trailing slash required
             200,
             data=settings
         )
