@@ -1,19 +1,19 @@
 [
   {
     "content": "S3.3: Build ExecutionEngine main loop - consume Redis intents, preflight guards, DriftAdapter calls",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "S3.3b: Implement intent schema and POST /api/engine/intents endpoint",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "S3.4: Wire live guards preflight - block on spread/depth/funding/basis/liq thresholds",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "S3.5: Implement SL/TP ladder (50%/30%/20%) + TP1→BE+fees + ATR trail",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "content": "S3.6: Build manual-sign fallback for non-delegated orders",
