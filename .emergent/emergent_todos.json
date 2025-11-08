@@ -48,7 +48,15 @@
     "status": "completed"
   },
   {
-    "content": "Phase 2 complete - all acceptance tests documented, bugs fixed, ready for user validation",
+    "content": "Fix CRITICAL bug: Emergency stop using direct axios instead of api.js killSwitch",
+    "status": "completed"
+  },
+  {
+    "content": "Fix CRITICAL bug: Activity log polling using direct axios instead of api.js getActivity",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2 100% complete - all API calls centralized, all bugs fixed, ready for production testing",
     "status": "completed"
   }
 ]
