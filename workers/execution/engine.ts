@@ -318,6 +318,157 @@ export class ExecutionEngine {
     }
     console.log('👋 Execution Engine shutdown');
   }
+
+  /**
+   * Consume intents from Redis Stream and process
+   * Stream: engine:intents
+   */
+  async consumeIntents() {
+    console.log('🔄 Starting intent consumption loop...');
+    console.log(`Stream: ${INTENT_STREAM}`);
+    
+    let lastId = '$'; // Start from latest
+    
+    while (this.running) {
+      try {
+        // Read new intents from stream (blocking with timeout)
+        const results = await this.redis.xread(
+          'BLOCK', 5000,  // Block for 5 seconds
+          'COUNT', 10,     // Process up to 10 intents per batch
+          'STREAMS', INTENT_STREAM, lastId
+        );
+        
+        if (!results || results.length === 0) {
+          continue; // No new intents
+        }
+        
+        // Process each intent
+        for (const [streamKey, messages] of results) {
+          for (const [messageId, fields] of messages) {
+            try {
+              // Parse intent from Redis Stream fields
+              const intent = this.parseIntent(fields);
+              
+              if (!intent) {
+                console.warn('⚠️ Failed to parse intent:', fields);
+                continue;
+              }
+              
+              console.log(`\n📥 Received intent ${messageId}:`, intent);
+              
+              // Execute intent
+              await this.executeIntent(intent);
+              
+              // Update lastId to continue from this point
+              lastId = messageId;
+              
+            } catch (error) {
+              console.error(`❌ Error processing intent ${messageId}:`, error);
+              this.emitEvent('intent_error', { messageId, error: error.message });
+            }
+          }
+        }
+        
+      } catch (error) {
+        console.error('❌ Error in consumeIntents loop:', error);
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5s on error
+      }
+    }
+  }
+  
+  /**
+   * Parse intent from Redis Stream fields
+   */
+  private parseIntent(fields: string[]): OrderIntent | null {
+    try {
+      // Convert fields array to object
+      const data: any = {};
+      for (let i = 0; i < fields.length; i += 2) {
+        data[fields[i]] = fields[i + 1];
+      }
+      
+      // Parse intent
+      const intent: OrderIntent = {
+        venue: data.venue || 'drift',
+        side: data.side as 'long' | 'short',
+        type: data.type || 'post_only_limit',
+        limitPx: parseFloat(data.px || data.limitPx),
+        size: parseFloat(data.size),
+        slPx: parseFloat(data.sl),
+        tpPx: {
+          p1: parseFloat(data.tp1 || data.tp?.[0]),
+          p2: parseFloat(data.tp2 || data.tp?.[1]),
+          p3: parseFloat(data.tp3 || data.tp?.[2])
+        },
+        leverage: parseInt(data.leverage || '5'),
+        subAccountId: parseInt(data.sub_account_id || '0')
+      };
+      
+      return intent;
+      
+    } catch (error) {
+      console.error('Error parsing intent:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Enhanced event emission to backend WebSocket
+   */
+  private async emitEvent(type: string, data: any): Promise<void> {
+    const event = {
+      type,
+      timestamp: new Date().toISOString(),
+      data,
+    };
+
+    console.log('📡 Event:', event);
+
+    // Write to log file
+    fs.appendFileSync(
+      '/app/workers/engine-events.log',
+      JSON.stringify(event) + '\n'
+    );
+    
+    // Send to backend API (async, non-blocking)
+    try {
+      await axios.post(`${BACKEND_URL}/api/ws/events`, event, {
+        timeout: 2000,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      console.warn('⚠️ Failed to send event to backend:', error.message);
+      // Non-critical - event is already in log file
+    }
+  }
+  
+  /**
+   * Main run loop
+   */
+  async run() {
+    this.running = true;
+    
+    console.log('🚀 Execution Engine running...');
+    console.log('Listening for intents on Redis Stream:', INTENT_STREAM);
+    
+    // Start consuming intents
+    await this.consumeIntents();
+  }
+  
+  /**
+   * Stop engine
+   */
+  async stop() {
+    console.log('🛑 Stopping Execution Engine...');
+    this.running = false;
+    
+    // Close Redis connection
+    this.redis.disconnect();
+    
+    // Shutdown adapter
+    await this.shutdown();
+  }
+
 }
 
 export default ExecutionEngine;
