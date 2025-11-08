@@ -180,10 +180,10 @@ export class ExecutionEngine {
     console.log('\n📋 Executing intent:', intent);
 
     // Apply guards
-    const guardsPass = await this.applyGuards(intent);
-    if (!guardsPass) {
-      console.log('❌ Intent rejected by guards');
-      this.emitEvent('order_rejected', { reason: 'guards_failed', intent });
+    const guardsResult = await this.applyGuards(intent);
+    if (!guardsResult.pass) {
+      console.log(`❌ Intent rejected by guards: ${guardsResult.reason}`);
+      this.emitEvent('order_rejected', { reason: guardsResult.reason, intent });
       return;
     }
 
